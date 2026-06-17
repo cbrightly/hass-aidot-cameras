@@ -1,0 +1,5 @@
+{
+    "name": "AiDot",
+    "integration_type": "hub",
+    "config_flow": true
+}
