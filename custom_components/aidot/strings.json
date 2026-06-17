@@ -1,0 +1,180 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your AiDot account credentials.",
+        "data": {
+          "country_code": "Country",
+          "username": "Email address",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-enter your password for {username}.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "description": "Update credentials for {username}.",
+        "data": {
+          "country_code": "Country",
+          "username": "Email address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email address or password.",
+      "cannot_connect": "Unable to connect to AiDot servers."
+    },
+    "abort": {
+      "already_configured": "Account already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AiDot options",
+        "data": {
+          "serve_port_base": "Camera stream port base",
+          "fast_connect": "Fast connect (LAN-direct)",
+          "sdes_audio": "SDES camera audio (experimental)",
+          "sdes_fast_liveplay": "SDES fast connect (faster signaling, on by default)",
+          "sdes_adaptive": "SDES adaptive fast-with-fallback (experimental, off by default)",
+          "mains_idle_s": "Mains camera warm-hold (seconds)",
+          "enable_local_control": "Local camera control"
+        },
+        "data_description": {
+          "serve_port_base": "Base local port for serving SDES camera streams to HA/go2rtc (each camera uses base..base+399). Change only if it conflicts with another service.",
+          "fast_connect": "Skip the ~2.5s relay/handshake waits so cameras start in ~1s instead of ~5s. ON by default (cameras are normally on the same LAN as Home Assistant). Turn OFF only if a camera is reached over the internet/strict NAT from the HA host - this mode uses no TURN relay.",
+          "sdes_audio": "Include audio in SDES camera streams (PCMA transcoded to AAC). Disabled by default because battery and weak-signal cameras send audio too sparsely, which stalls the stream. Enable only for mains-powered cameras with a reliable connection.",
+          "sdes_fast_liveplay": "Matches the official app: skip the livePlayResp wait and go straight to the video handshake, so SDES (battery) cameras start ~4.5 s sooner. ON by default. The PTZ camera is automatically excluded (its handshake needs the slower path). If you ever see a live view drop to a snapshot on a specific camera, turn this off.",
+          "sdes_adaptive": "Tries the fast SDES connect first and automatically falls back to the reliable relay path if it doesn't deliver video, so a fast connect is safe even for cameras that aren't on the local network. A camera that fails the fast path is remembered and skips it on later views. Off by default while its real-world reliability is measured: a fast failure adds a delay (~40s) before the fallback, so leave it off unless you want to help test it.",
+          "mains_idle_s": "How long to keep a mains-powered camera's live session warm after the last viewer, so re-opening it is instant instead of paying the full cold-start handshake. Default 120s. Set 0 to never release (always warm). Each warm camera uses a stream slot and keeps decrypting, so keep the total within the concurrent-stream cap (default 3). Battery cameras ignore this (they warm on motion to save battery).",
+          "enable_local_control": "Route camera settings (LED, motion detection, night vision, sensitivity, volume, PTZ tracking) over the LAN instead of the cloud, for eligible mains-powered cameras. Faster and works during cloud outages; falls back to cloud automatically. Does not affect video. Battery cameras are skipped."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "No audio could be decoded from '{media}' - check the media URL or path."
+    },
+    "talk_session_failed": {
+      "message": "Could not establish a talk session (camera must be streaming - open the live view first)."
+    },
+    "ptz_failed": {
+      "message": "PTZ command '{direction}' was not sent (camera must be streaming - open the live view first)."
+    },
+    "command_failed": {
+      "message": "AiDot {action} failed: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} was rejected by the device."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "speaker_volume": {
+        "name": "Speaker volume"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "status_led": {
+        "name": "Status LED"
+      },
+      "microphone": {
+        "name": "Microphone (audio privacy)"
+      },
+      "ptz_tracking": {
+        "name": "Auto-tracking"
+      },
+      "ir_light": {
+        "name": "IR light"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Night vision",
+        "state": {
+          "auto": "Auto",
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "resolution": {
+        "name": "Resolution",
+        "state": {
+          "hd": "HD",
+          "sd": "SD"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion",
+              "person": "Person"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "sd_card_status": {
+        "name": "SD card status"
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Occupancy"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Move up"
+      },
+      "ptz_down": {
+        "name": "Move down"
+      },
+      "ptz_left": {
+        "name": "Move left"
+      },
+      "ptz_right": {
+        "name": "Move right"
+      },
+      "ptz_stop": {
+        "name": "Stop"
+      },
+      "ptz_zoom_in": {
+        "name": "Zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "Zoom out"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Floodlight"
+      }
+    }
+  }
+}
