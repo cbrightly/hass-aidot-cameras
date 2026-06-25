@@ -209,58 +209,91 @@ data:
 
 Home Assistant has no built-in PTZ overlay (neither does ONVIF/Reolink - it's a
 core limitation), but you can put the arrows **on top of the live feed** with the
-built-in **Picture Elements** card - no HACS required. Tapping an arrow moves the
-camera instead of opening a dialog.
+built-in **Picture Elements** card - no HACS required.
 
 `camera_view: live` is important: it keeps the WebRTC session open so PTZ
 commands have an active channel. While the stream is connecting the card shows
 the camera's latest event thumbnail as a poster (no blank tile).
+
+**Bind each arrow to a fixed-duration *nudge*, not a raw move.** A bare
+`button.press` (or an `aidot.ptz` move) starts continuous motion that only ends
+when a separate `stop` arrives — so a tap with no follow-up keeps panning. A tiny
+parameterized script makes every tap a self-terminating step (move → wait →
+stop), which is the safe, predictable model. (See *How responsive is PTZ?* for
+why this beats hand-timing a stop or holding.)
+
+```yaml
+# scripts.yaml  (or Settings → Automations & Scenes → Scripts → edit as YAML)
+ptz_nudge:
+  alias: PTZ nudge
+  mode: queued        # queue rapid taps instead of dropping them
+  fields:
+    entity: { description: PTZ camera entity }
+    direction: { description: up/down/left/right/zoom_in/zoom_out }
+  sequence:
+    - action: aidot.ptz
+      target: { entity_id: "{{ entity }}" }
+      data: { direction: "{{ direction }}", speed: 3 }
+    - delay: { milliseconds: 300 }   # tune for step size
+    - action: aidot.ptz
+      target: { entity_id: "{{ entity }}" }
+      data: { direction: stop }
+```
 
 ```yaml
 type: picture-elements
 camera_image: camera.example_ptz
 camera_view: live
 elements:
-  # D-pad
+  # D-pad — each tap is a fixed nudge that stops itself
   - type: icon
     icon: mdi:arrow-up-bold
     style: {top: 12%, left: 50%, transform: translate(-50%,-50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_up}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: up}}
   - type: icon
     icon: mdi:arrow-down-bold
     style: {top: 88%, left: 50%, transform: translate(-50%,-50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_down}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: down}}
   - type: icon
     icon: mdi:arrow-left-bold
     style: {top: 50%, left: 8%, transform: translate(-50%,-50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_left}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: left}}
   - type: icon
     icon: mdi:arrow-right-bold
     style: {top: 50%, left: 92%, transform: translate(-50%,-50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_right}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: right}}
   # Zoom
   - type: icon
     icon: mdi:magnify-plus
     style: {bottom: 8%, left: 38%, transform: translate(-50%,50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_zoom_in}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: zoom_in}}
   - type: icon
     icon: mdi:magnify-minus
     style: {bottom: 8%, left: 62%, transform: translate(-50%,50%), color: white}
-    tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.example_ptz_ptz_zoom_out}}
+    tap_action: {action: perform-action, perform_action: script.ptz_nudge,
+                 data: {entity: camera.example_ptz, direction: zoom_out}}
 ```
 
 For a tidier joystick/D-pad in the fullscreen view, the HACS
-**Advanced Camera Card** can bind its PTZ controls to these same button
-entities. This is cosmetic: the card issues the same discrete button-press
-actions, so it looks nicer but behaves identically to the overlay above (see
-*How responsive is PTZ?* below). It is also the recommended card for the fastest
-live view — see *[Recommended dashboard card](#recommended-dashboard-card-fastest-live-view)*.
+**Advanced Camera Card** has a built-in PTZ pad. Note it issues the camera's
+**raw** move/stop button presses (continuous motion — you tap an arrow to move
+and the centre button to stop), so for self-terminating taps prefer the nudge
+overlay above. It is also the recommended card for the fastest live view — see
+*[Recommended dashboard card](#recommended-dashboard-card-fastest-live-view)*.
+
+> **Why no bundled "hold-to-move" custom card?** A press-and-hold joystick was
+> considered, but it is not reliable on this transport: PTZ commands are
+> fire-and-forget over the camera's control channel (a cloud round-trip unless
+> Local camera control is on), so a dropped or late *stop* after an open-ended
+> hold can leave the camera panning, and the picture lag means you overshoot the
+> release anyway (see *How responsive is PTZ?*). Fixed-duration nudges keep every
+> action self-terminating and need no custom front-end code, so that is what is
+> documented here.
 
 ### How responsive is PTZ? (and how it compares to the app)
 
@@ -288,68 +321,14 @@ app, and that is a property of the control model, not just latency.**
 - Keep the stream live while steering (`camera_view: live`), so no handshake
   delay precedes the first command.
 - Prefer **scripted fixed-duration nudges** over hand-timing the stop, for small
-  repeatable steps:
+  repeatable steps. The `script.ptz_nudge` shown under
+  *[Overlay the controls on the live view](#overlay-the-controls-on-the-live-view-no-custom-cards)*
+  does exactly this — move, short delay, stop — so each tap is self-terminating.
 
-```yaml
-script:
-  ptz_left_nudge:
-    sequence:
-      - action: aidot.ptz
-        target: { entity_id: camera.example_ptz }
-        data: { direction: left, speed: 3 }
-      - delay: { milliseconds: 300 }   # tune for step size
-      - action: aidot.ptz
-        target: { entity_id: camera.example_ptz }
-        data: { direction: stop }
-```
-
-For genuinely app-like control, this integration ships exactly that — the
-**AiDot PTZ Card** maps pointer press/release to `move`/`stop`. See
-*[App-like PTZ (press-and-hold card)](#app-like-ptz-press-and-hold-card)* below.
-
-## App-like PTZ (press-and-hold card)
-
-For the closest thing to the official app's joystick, the integration bundles a
-custom Lovelace card, **AiDot PTZ Card**. Unlike the discrete button/overlay
-approaches above, it uses **press-and-hold**: holding a direction moves the
-camera and *releasing* stops it — so you steer while watching the feed instead of
-hand-timing a separate stop. The live feed is rendered over the native go2rtc
-WebRTC path, and keeping it on screen holds the stream session open (which PTZ
-commands require).
-
-> This does not fully erase the gap with the app — you still steer against a feed
-> that is a fraction of a second behind, and command latency still depends on the
-> path (see *How responsive is PTZ?*). For the tightest response, enable **Local
-> camera control** so commands go LAN-direct on mains cameras.
-
-**Installation: none.** The integration serves the card and registers it
-automatically; after installing/restarting Home Assistant it appears in the
-dashboard card picker as **AiDot PTZ Card**. (Hard-refresh the browser once if it
-doesn't show up immediately.)
-
-```yaml
-type: custom:aidot-ptz-card
-entity: camera.example_ptz
-speed: 4               # 1 (slow) – 8 (fast)
-show_feed: true        # embed the live WebRTC feed (also keeps the session alive)
-pan: true              # show left/right
-tilt: true             # show up/down (set false for a pan-only camera)
-zoom: true             # show zoom +/-
-aspect_ratio: "16:9"   # used only when show_feed is false
-```
-
-| Option | Default | Description |
-|---|---|---|
-| `entity` | — (required) | The PTZ camera entity (`camera.*`). |
-| `speed` | `4` | Movement speed 1–8, passed to `aidot.ptz`. |
-| `show_feed` | `true` | Embed the live feed. Keep `true` so the stream stays open for PTZ; set `false` to render just the control pad. |
-| `pan` | `true` | Show the left/right controls. |
-| `tilt` | `true` | Show the up/down controls (set `false` for pan-only cameras). |
-| `zoom` | `true` | Show the zoom in/out controls. |
-| `aspect_ratio` | `"16:9"` | Card aspect ratio used only when `show_feed` is `false`. |
-
-If the page is hidden or loses focus mid-move, the card sends `stop`
-automatically so the camera can't keep panning.
+This is the most app-like control that is reliable on this transport. A true
+press-and-hold joystick would need custom front-end code *and* would still depend
+on a *stop* arriving over a fire-and-forget channel, so it is intentionally not
+provided; the nudge overlay above is the recommended approach.
 
 ## Resolution (HD / SD)
 
