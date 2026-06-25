@@ -2,6 +2,7 @@
   "domain": "aidot",
   "name": "AiDot",
   "after_dependencies": [
+    "ffmpeg",
     "go2rtc"
   ],
   "codeowners": [

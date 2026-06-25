@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Keep the SHA-pinned GitHub Actions in the workflows current. Dependabot opens
+  # PRs that bump the pinned SHA and update the trailing version comment.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+
+  # Python deps are intentionally NOT managed here: the runtime dependency lives
+  # in manifest.json (a conservative floor on python-aidot-cameras, which HA
+  # resolves at install), and requirements_test.txt is a small test pin. Add a
+  # "pip" ecosystem block if that policy ever changes.
