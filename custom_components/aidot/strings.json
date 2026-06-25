@@ -69,7 +69,7 @@
   },
   "exceptions": {
     "talk_no_audio": {
-      "message": "No audio could be decoded from '{media}' - check the media URL or path."
+      "message": "No audio could be decoded from {media} - check the media URL or path."
     },
     "talk_session_failed": {
       "message": "Could not establish a talk session (camera must be streaming - open the live view first)."
