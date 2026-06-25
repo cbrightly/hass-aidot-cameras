@@ -92,7 +92,10 @@ live:
   provider: ha
   # show the tile already live instead of a click-to-play thumbnail
   preload: true
-  lazy_unload: never
+  # `[]` (the default) never auto-unloads the stream once it is loaded, so
+  # re-views stay warm. The card's older string form (`lazy_unload: never`) was
+  # replaced by this list form and is now rejected as invalid.
+  lazy_unload: []
 dimensions:
   # Fixed tile size. Without this the card sizes to the media and can balloon
   # when a stream (re)connects.
