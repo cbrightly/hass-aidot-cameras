@@ -81,7 +81,7 @@ biggest improvement to perceived load speed.
 ```yaml
 type: custom:advanced-camera-card
 cameras:
-  - camera_entity: camera.bedroom_m3_pro
+  - camera_entity: camera.example_camera
 live:
   # Use the native Home Assistant path. This integration hands HA a go2rtc
   # RTSP source, so the `ha` provider already serves go2rtc WebRTC (sub-second
@@ -129,12 +129,12 @@ columns: 3
 square: false
 cards:
   - type: picture-entity
-    entity: camera.bedroom_m3_pro
+    entity: camera.example_camera
     camera_view: auto        # 'auto' = snapshot thumbnail, NOT a live stream
     show_state: false
     tap_action:
       action: navigate
-      navigation_path: /lovelace/cam-bedroom
+      navigation_path: /lovelace/cam-example
   # …one per camera; stays cheap no matter how many you add.
 ```
 
@@ -149,7 +149,7 @@ streams, so you never blow the cap:
 ```yaml
 type: custom:advanced-camera-card
 cameras:
-  - camera_entity: camera.bedroom_m3_pro
+  - camera_entity: camera.example_camera
 live:
   provider: ha             # native go2rtc WebRTC path (sub-second once warm)
   preload: true
@@ -196,7 +196,7 @@ PTZ cameras (model **A001064**) expose two ways to move the camera:
 ```yaml
 service: aidot.ptz
 target:
-  entity_id: camera.outdoor_ptz
+  entity_id: camera.example_ptz
 data:
   direction: left      # up/down/left/right/left_up/.../zoom_in/zoom_out/stop
   speed: 4             # 1 (slow) - 8 (fast)
@@ -218,7 +218,7 @@ the camera's latest event thumbnail as a poster (no blank tile).
 
 ```yaml
 type: picture-elements
-camera_image: camera.outdoor_ptz
+camera_image: camera.example_ptz
 camera_view: live
 elements:
   # D-pad
@@ -226,33 +226,33 @@ elements:
     icon: mdi:arrow-up-bold
     style: {top: 12%, left: 50%, transform: translate(-50%,-50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_up}}
+                 target: {entity_id: button.example_ptz_ptz_up}}
   - type: icon
     icon: mdi:arrow-down-bold
     style: {top: 88%, left: 50%, transform: translate(-50%,-50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_down}}
+                 target: {entity_id: button.example_ptz_ptz_down}}
   - type: icon
     icon: mdi:arrow-left-bold
     style: {top: 50%, left: 8%, transform: translate(-50%,-50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_left}}
+                 target: {entity_id: button.example_ptz_ptz_left}}
   - type: icon
     icon: mdi:arrow-right-bold
     style: {top: 50%, left: 92%, transform: translate(-50%,-50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_right}}
+                 target: {entity_id: button.example_ptz_ptz_right}}
   # Zoom
   - type: icon
     icon: mdi:magnify-plus
     style: {bottom: 8%, left: 38%, transform: translate(-50%,50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_zoom_in}}
+                 target: {entity_id: button.example_ptz_ptz_zoom_in}}
   - type: icon
     icon: mdi:magnify-minus
     style: {bottom: 8%, left: 62%, transform: translate(-50%,50%), color: white}
     tap_action: {action: perform-action, perform_action: button.press,
-                 target: {entity_id: button.outdoor_ptz_ptz_zoom_out}}
+                 target: {entity_id: button.example_ptz_ptz_zoom_out}}
 ```
 
 For a tidier joystick/D-pad in the fullscreen view, the HACS
@@ -292,20 +292,64 @@ app, and that is a property of the control model, not just latency.**
 
 ```yaml
 script:
-  ptz_outdoor_left_nudge:
+  ptz_left_nudge:
     sequence:
       - action: aidot.ptz
-        target: { entity_id: camera.outdoor_ptz }
+        target: { entity_id: camera.example_ptz }
         data: { direction: left, speed: 3 }
       - delay: { milliseconds: 300 }   # tune for step size
       - action: aidot.ptz
-        target: { entity_id: camera.outdoor_ptz }
+        target: { entity_id: camera.example_ptz }
         data: { direction: stop }
 ```
 
-A genuinely app-like press-and-hold joystick would need a custom Lovelace card
-that maps pointer press/release to `move`/`stop`; no built-in or current HACS
-card does this today.
+For genuinely app-like control, this integration ships exactly that — the
+**AiDot PTZ Card** maps pointer press/release to `move`/`stop`. See
+*[App-like PTZ (press-and-hold card)](#app-like-ptz-press-and-hold-card)* below.
+
+## App-like PTZ (press-and-hold card)
+
+For the closest thing to the official app's joystick, the integration bundles a
+custom Lovelace card, **AiDot PTZ Card**. Unlike the discrete button/overlay
+approaches above, it uses **press-and-hold**: holding a direction moves the
+camera and *releasing* stops it — so you steer while watching the feed instead of
+hand-timing a separate stop. The live feed is rendered over the native go2rtc
+WebRTC path, and keeping it on screen holds the stream session open (which PTZ
+commands require).
+
+> This does not fully erase the gap with the app — you still steer against a feed
+> that is a fraction of a second behind, and command latency still depends on the
+> path (see *How responsive is PTZ?*). For the tightest response, enable **Local
+> camera control** so commands go LAN-direct on mains cameras.
+
+**Installation: none.** The integration serves the card and registers it
+automatically; after installing/restarting Home Assistant it appears in the
+dashboard card picker as **AiDot PTZ Card**. (Hard-refresh the browser once if it
+doesn't show up immediately.)
+
+```yaml
+type: custom:aidot-ptz-card
+entity: camera.example_ptz
+speed: 4               # 1 (slow) – 8 (fast)
+show_feed: true        # embed the live WebRTC feed (also keeps the session alive)
+pan: true              # show left/right
+tilt: true             # show up/down (set false for a pan-only camera)
+zoom: true             # show zoom +/-
+aspect_ratio: "16:9"   # used only when show_feed is false
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `entity` | — (required) | The PTZ camera entity (`camera.*`). |
+| `speed` | `4` | Movement speed 1–8, passed to `aidot.ptz`. |
+| `show_feed` | `true` | Embed the live feed. Keep `true` so the stream stays open for PTZ; set `false` to render just the control pad. |
+| `pan` | `true` | Show the left/right controls. |
+| `tilt` | `true` | Show the up/down controls (set `false` for pan-only cameras). |
+| `zoom` | `true` | Show the zoom in/out controls. |
+| `aspect_ratio` | `"16:9"` | Card aspect ratio used only when `show_feed` is `false`. |
+
+If the page is hidden or loses focus mid-move, the card sends `stop`
+automatically so the camera can't keep panning.
 
 ## Resolution (HD / SD)
 
@@ -468,22 +512,22 @@ triggers:
 actions:
   - action: button.press
     target:
-      entity_id: button.outdoor_ptz_ptz_left
+      entity_id: button.example_ptz_ptz_left
   - delay:
       seconds: 5
   - action: button.press
     target:
-      entity_id: button.outdoor_ptz_ptz_stop
+      entity_id: button.example_ptz_ptz_stop
   - delay:
       seconds: 10
   - action: button.press
     target:
-      entity_id: button.outdoor_ptz_ptz_right
+      entity_id: button.example_ptz_ptz_right
   - delay:
       seconds: 5
   - action: button.press
     target:
-      entity_id: button.outdoor_ptz_ptz_stop
+      entity_id: button.example_ptz_ptz_stop
 ```
 
 ## Known limitations

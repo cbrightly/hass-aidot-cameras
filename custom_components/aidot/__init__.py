@@ -76,6 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
     except Exception:
         pass  # already registered from a previous entry setup
 
+    # Serve and auto-load the bundled Lovelace card(s). Best-effort: never blocks
+    # setup if the frontend pieces are unavailable.
+    from .frontend import async_register_frontend
+    try:
+        await async_register_frontend(hass)
+    except Exception:  # pragma: no cover - defensive
+        pass
+
     # HA 2026.6 async_process_integration_platforms does not auto-discover
     # media_source.py in custom components, so register it explicitly.
     # hass.data["media_source"] is the dict HA's own platform loader writes to.
