@@ -75,7 +75,7 @@
       "message": "Could not establish a talk session (camera must be streaming - open the live view first)."
     },
     "ptz_failed": {
-      "message": "PTZ command '{direction}' was not sent (camera must be streaming - open the live view first)."
+      "message": "PTZ command {direction} was not sent (camera must be streaming - open the live view first)."
     },
     "command_failed": {
       "message": "AiDot {action} failed: {error}"
