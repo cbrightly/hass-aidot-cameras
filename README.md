@@ -112,31 +112,64 @@ Card is recommended because it also handles the PTZ overlay.
 
 ### Multiple cameras on one dashboard
 
-Use `live.provider: ha` on **every** card (one camera per card, or a multi-
-camera card) — that keeps each tile on the native go2rtc WebRTC path. A grid of
-single-camera cards:
+**Don't make every tile live.** A wall of always-streaming tiles is what
+overwhelms the host, the network, and (for battery models) the cameras
+themselves — see the resource notes below. The approach that scales is
+**tiered**: a cheap snapshot overview to see everything at a glance, and a live
+view only for the camera you actually open.
+
+**Overview grid (no live streams).** Snapshot tiles cost almost nothing — the
+integration serves a cached thumbnail (refreshed roughly every 5 min), so a grid
+of these never starts a stream, never touches the concurrent-stream cap, and
+never wakes a battery camera. Tapping a tile opens the live focus view.
+
+```yaml
+type: grid
+columns: 3
+square: false
+cards:
+  - type: picture-entity
+    entity: camera.bedroom_m3_pro
+    camera_view: auto        # 'auto' = snapshot thumbnail, NOT a live stream
+    show_state: false
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/cam-bedroom
+  # …one per camera; stays cheap no matter how many you add.
+```
+
+(The Advanced Camera Card can render the same overview with `view.default: image`
+and `live.auto_play: never` if you prefer it for visual consistency — the point
+is that the grid does not auto-play.)
+
+**Focus view (one live camera).** Put a single Advanced Camera Card on its own
+subview — the `navigation_path` the overview tile points at. Only this camera
+streams, so you never blow the cap:
 
 ```yaml
 type: custom:advanced-camera-card
 cameras:
   - camera_entity: camera.bedroom_m3_pro
 live:
-  provider: ha
-  auto_play: [visible]
+  provider: ha             # native go2rtc WebRTC path (sub-second once warm)
+  preload: true
+  auto_play: [selected]
   auto_unmute: []
 dimensions:
   aspect_ratio_mode: static
   aspect_ratio: "16:9"
-# …repeat one card per camera, each with `live.provider: ha`
 ```
 
-One host-resource note for big live walls: mains **A000088** cameras stream by
-decrypting in-process and each holds one of a small number of concurrent serve
-slots (3 by default; raise with the `AIDOT_MAX_CONCURRENT_STREAMS` environment
-variable). Battery/SDES cameras don't use a slot. So up to three A000088 cameras
-can be live at once out of the box; add more A000088 cameras to a single all-live
-dashboard and the extra tiles queue until a slot frees. Most fleets mix models
-and never hit this.
+**If you do want an all-live wall**, keep it small and put `live.provider: ha` on
+every card. The limit is real: mains **A000088** cameras stream by decrypting
+in-process and each holds one of a small number of concurrent serve slots (**3**
+by default; raise with the `AIDOT_MAX_CONCURRENT_STREAMS` environment variable).
+Battery/SDES cameras don't use a slot, **but** streaming them continuously drains
+the battery — they are designed to warm on motion, not to sit live on a
+dashboard. So in practice: at most ~3 mains cameras live at once, and don't
+auto-play battery cameras in a grid at all. Each live 720p stream is also ~1–3
+Mbps of continuous bandwidth versus a few KB per snapshot tile — another reason
+the snapshot overview is the right default for more than a handful of cameras.
 
 ## Two-way audio (`aidot.talk`)
 
@@ -222,10 +255,57 @@ elements:
                  target: {entity_id: button.outdoor_ptz_ptz_zoom_out}}
 ```
 
-For a polished joystick/D-pad in the fullscreen view, the HACS
-**Advanced Camera Card** can bind its PTZ controls to these same buttons -
-optional, for the best experience. It is also the recommended card for the
-fastest live view — see *[Recommended dashboard card](#recommended-dashboard-card-fastest-live-view)*.
+For a tidier joystick/D-pad in the fullscreen view, the HACS
+**Advanced Camera Card** can bind its PTZ controls to these same button
+entities. This is cosmetic: the card issues the same discrete button-press
+actions, so it looks nicer but behaves identically to the overlay above (see
+*How responsive is PTZ?* below). It is also the recommended card for the fastest
+live view — see *[Recommended dashboard card](#recommended-dashboard-card-fastest-live-view)*.
+
+### How responsive is PTZ? (and how it compares to the app)
+
+Be realistic about this: **PTZ in Home Assistant does not feel like the official
+app, and that is a property of the control model, not just latency.**
+
+- **Discrete move + stop, not press-and-hold.** The app uses a press-and-hold
+  joystick — hold to move, release to stop — so you steer in a tight loop while
+  watching the picture. Home Assistant has no "on release" action: a tap sends
+  one `move` command and the camera keeps moving until a *separate* `stop`
+  command arrives. You are hand-timing the stop, so it is easy to overshoot.
+- **Commands travel on the control channel, not the WebRTC video path.** The
+  "sub-second go2rtc WebRTC" figure describes the *picture* only. PTZ commands go
+  over the camera's control channel, which by default is a **cloud round-trip**.
+  Enabling **Local camera control** (integration options) routes them over the
+  LAN instead — the single biggest improvement to command latency — but only for
+  eligible **mains** cameras; battery cameras stay cloud-only.
+- **You steer against a delayed picture.** Even with sub-second video you react
+  to a feed that is fractions of a second behind, which compounds the overshoot
+  from manual stop timing.
+
+**What actually helps:**
+
+- Turn on **Local camera control** for mains PTZ cameras (LAN command path).
+- Keep the stream live while steering (`camera_view: live`), so no handshake
+  delay precedes the first command.
+- Prefer **scripted fixed-duration nudges** over hand-timing the stop, for small
+  repeatable steps:
+
+```yaml
+script:
+  ptz_outdoor_left_nudge:
+    sequence:
+      - action: aidot.ptz
+        target: { entity_id: camera.outdoor_ptz }
+        data: { direction: left, speed: 3 }
+      - delay: { milliseconds: 300 }   # tune for step size
+      - action: aidot.ptz
+        target: { entity_id: camera.outdoor_ptz }
+        data: { direction: stop }
+```
+
+A genuinely app-like press-and-hold joystick would need a custom Lovelace card
+that maps pointer press/release to `move`/`stop`; no built-in or current HACS
+card does this today.
 
 ## Resolution (HD / SD)
 
@@ -410,6 +490,7 @@ actions:
 
 - **Resolution select is a no-op on some models.** The M3 Pro (A000088) and other fixed-resolution cameras stream a single resolution (720p on the M3 Pro) regardless of the HD/SD setting. The control exists for parity with the AiDot app and works as expected on multi-resolution models.
 - **PTZ commands, resolution changes, and two-way audio require an active stream.** The camera must be streaming for these commands to reach it — open the live camera card first, then retry.
+- **PTZ control is not app-like.** Home Assistant sends discrete *move* and *stop* commands (there is no press-and-hold/release), and those commands travel over the camera's control channel — a cloud round-trip unless **Local camera control** is enabled for that (mains) camera. Expect to overshoot and correct rather than steer smoothly. See *[How responsive is PTZ?](#how-responsive-is-ptz-and-how-it-compares-to-the-app)* for the workarounds.
 - **Cloud recordings require a subscription.** The Media Browser integration for recorded clips only works when the camera has an active AiDot cloud storage plan.
 - **Off-LAN streaming uses STUN/TURN.** When Home Assistant and the camera are on different networks, media is relayed through the AiDot cloud TURN servers (the same path the official app uses remotely). This is why the default **Connection mode** is Relay — it keeps that fallback available. LAN-direct is faster on the local network but cannot reach a camera on another network/VLAN.
 - **Battery cameras skip local control.** The optional LAN-direct discovery uses a UDP subnet sweep that battery cameras do not respond to, so they fall back to cloud-only control even when local control is enabled in the integration options.
@@ -437,7 +518,7 @@ it the integration falls back to HLS for *all* views. See
 *[Recommended dashboard card](#recommended-dashboard-card-fastest-live-view)*.
 
 **"Camera must be streaming" error on PTZ, resolution change, or `aidot.talk`**
-Open the live camera card in the Home Assistant UI to establish the stream session, then retry the command. PTZ, resolution, and audio all ride an active WebRTC session.
+Open the live camera card in the Home Assistant UI to establish the stream session, then retry the command. PTZ, resolution, and audio commands are sent over the camera's control channel, which only exists while a live session is active (the control channel is separate from the go2rtc WebRTC video path).
 
 **Clips in the Media Browser show blank or won't play**
 Recorded clips require an active AiDot cloud storage subscription. Check the AiDot mobile app to confirm the camera's cloud plan is active.
