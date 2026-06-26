@@ -34,16 +34,20 @@ Then start setup and sign in with your AiDot account:
 
 [![Open your Home Assistant instance and start setting up the AiDot integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=aidot)
 
-<details>
-<summary>Manual steps (fallback, or if the badges don't open your instance)</summary>
+> **Open the badges in a web browser, not inside the Home Assistant app**
+> (long-press → *Open in browser*). The first click asks for your Home Assistant
+> URL and stores it in that browser; until then the redirect has nowhere to go
+> and you'll see *"my.home-assistant.io is not a valid route"*. If the badges
+> still don't open your instance, use the manual steps below — they do the exact
+> same thing.
+
+### Manual steps
 
 1. In HACS → **Integrations** → ⋮ → **Custom repositories**, add
    `https://github.com/cbrightly/hass-aidot-cameras` with category **Integration**.
 2. Install **AiDot**, then restart Home Assistant.
 3. **Settings → Devices & Services → Add Integration → AiDot**, and sign in with
    your AiDot account.
-
-</details>
 
 > The integration depends on `python-aidot-cameras[webrtc]`, which Home
 > Assistant installs automatically from this integration's manifest. For camera
