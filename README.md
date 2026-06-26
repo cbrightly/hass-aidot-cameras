@@ -25,11 +25,25 @@ integration installs automatically.
 
 ## Installation (HACS)
 
+**One-click** (requires [HACS](https://hacs.xyz) already installed). Click to add
+this repository to your HACS, then **Download** and restart Home Assistant:
+
+[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cbrightly&repository=hass-aidot-cameras&category=integration)
+
+Then start setup and sign in with your AiDot account:
+
+[![Open your Home Assistant instance and start setting up the AiDot integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=aidot)
+
+<details>
+<summary>Manual steps (fallback, or if the badges don't open your instance)</summary>
+
 1. In HACS → **Integrations** → ⋮ → **Custom repositories**, add
    `https://github.com/cbrightly/hass-aidot-cameras` with category **Integration**.
 2. Install **AiDot**, then restart Home Assistant.
 3. **Settings → Devices & Services → Add Integration → AiDot**, and sign in with
    your AiDot account.
+
+</details>
 
 > The integration depends on `python-aidot-cameras[webrtc]`, which Home
 > Assistant installs automatically from this integration's manifest. For camera
