@@ -56,6 +56,17 @@ Then start setup and sign in with your AiDot account:
 > go2rtc is bundled with Home Assistant 2026. Without go2rtc the integration
 > falls back to HLS (higher latency).
 
+> **Relation to the built-in AiDot integration.** This integration uses the
+> `aidot` domain - the same as the **built-in** Home Assistant *AiDot*
+> integration (lights-only) - which it intentionally supersedes to add camera
+> support. Because it lives in `custom_components/`, Home Assistant loads it
+> instead of the built-in one, and the log shows a *"custom integration aidot
+> which has not been tested by Home Assistant"* notice - this is expected. You
+> don't need to remove or disable the built-in integration first. (This also
+> means the integration isn't eligible for the HACS **default** store, which
+> doesn't accept integrations that override a core one - install it as a custom
+> repository using the steps above.)
+
 ## Configuration options
 
 After the integration is set up, open **Settings → Devices & Services → AiDot →
