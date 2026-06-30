@@ -125,11 +125,11 @@ A few of the most common; the full list is in the
 
 ## Supported devices
 
-| Category | Confirmed                       |
-| -------- | ------------------------------- |
-| Cameras  | M3 Pro (A000088), PTZ (A001064) |
-| Lights   | AiDot / Leedarson Wi-Fi bulbs   |
-| Hubs     | AiDot hubs                      |
+| Category | Confirmed                                              |
+| -------- | ------------------------------------------------------ |
+| Cameras  | M3 Pro (A000088), L2 battery (A001513), PTZ (A001064)  |
+| Lights   | AiDot / Leedarson Wi-Fi bulbs                          |
+| Hubs     | AiDot hubs                                             |
 
 Other models should work too. Full entity list:
 **[Supported devices](https://github.com/cbrightly/hass-aidot-cameras/wiki/Supported-devices)**.
