@@ -6,7 +6,7 @@ import logging
 import time
 from datetime import datetime, UTC
 
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player.const import MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -129,6 +129,10 @@ class AidotMediaSource(MediaSource):
             else:
                 title = desc
 
+            # Known cosmetic limitation: picUrl is a short-lived CDN URL, so the
+            # media-browser thumbnail may go stale (broken icon) once it expires.
+            # Playback is unaffected - the camera entity proxies live bytes for
+            # exactly this reason; only the static browser preview is affected.
             pic_url = ev.get("picUrl") or None
 
             children.append(
@@ -147,8 +151,10 @@ class AidotMediaSource(MediaSource):
         # Pre-warm the cache for the most recent clips so tapping one plays
         # instantly instead of waiting on a cold transcode (best-effort).
         if warm_ids:
-            self.hass.async_create_task(
-                async_prewarm_events(device_id, warm_ids)
+            # Named background task: gives it a proper lifecycle and keeps any
+            # prewarm failure from surfacing as an unretrieved-task warning.
+            self.hass.async_create_background_task(
+                async_prewarm_events(device_id, warm_ids), "aidot-prewarm-events"
             )
 
         return BrowseMediaSource(

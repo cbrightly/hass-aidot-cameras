@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import SirenEntity
+from homeassistant.components.siren.const import SirenEntityFeature
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,7 +54,6 @@ class AidotCameraSiren(AidotEntity, SirenEntity):
     """The camera's built-in siren/alarm."""
 
     _attr_translation_key = "siren"
-    _attr_icon = "mdi:alarm-light"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
@@ -66,7 +66,9 @@ class AidotCameraSiren(AidotEntity, SirenEntity):
     def is_on(self) -> bool | None:
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.siren
+        # siren is a camera-only status field (CameraStatusData), so it isn't on
+        # the base DeviceStatusData type the coordinator is generically typed to.
+        return getattr(self.coordinator.data, "siren", None)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.async_run_command(

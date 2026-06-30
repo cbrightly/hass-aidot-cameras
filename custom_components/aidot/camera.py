@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from aidot.camera.client import TALK_PCM_FRAME_BYTES, TALK_PCM_RATE
+from aidot.camera.constants import TALK_PCM_FRAME_BYTES, TALK_PCM_RATE
 from aidot.camera.go2rtc import DEFAULT_BASE_URL, Go2rtcClient
 
 from .const import (
@@ -387,7 +387,11 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
     async def _prefetch_thumbnail(self) -> None:
         try:
             url = await self.coordinator.device_client.async_get_latest_thumbnail()
-        except Exception:
+        except Exception as exc:
+            _LOGGER.debug(
+                "Thumbnail prefetch (cloud lookup) failed for %s: %s",
+                self.unique_id, exc,
+            )
             return
         if not url:
             return
@@ -647,13 +651,18 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             pass
 
     def _active_status(self) -> str | None:
-        """Return the status text to show now, or None.  Expires error text."""
+        """Return the status text to show now, or None.  Expires error text.
+
+        Pure: an expired error reads as None without mutating ``_stream_status``
+        (this is called from the ``extra_state_attributes`` property getter, which
+        must not have side effects).  The stale tuple is harmless - we keep
+        returning None for it, and the next ``_set_stream_status`` overwrites it.
+        """
         st = self._stream_status
         if st is None:
             return None
         text, is_error, ts = st
         if is_error and (time.monotonic() - ts) > self._STATUS_ERROR_TTL:
-            self._stream_status = None
             return None
         return text
 
@@ -695,16 +704,25 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             if (time.monotonic() - self._cached_image_ts) < 300:
                 return self._cached_image
             # Stamp now so concurrent callers skip the refresh; the real image
-            # arrives below and is written back under the lock.
+            # arrives below and is written back under the lock.  Remember the
+            # previous stamp so a failed refresh can roll it back - otherwise the
+            # 300s guard above would block any retry for 5 min even though we
+            # never actually refreshed.  Only a successful fetch keeps the
+            # advanced stamp.
+            prev_ts = self._cached_image_ts
             self._cached_image_ts = time.monotonic()
             cached = self._cached_image
 
         try:
             url = await self.coordinator.device_client.async_get_latest_thumbnail()
         except Exception:
+            async with self._image_lock:
+                self._cached_image_ts = prev_ts
             return cached
 
         if not url:
+            async with self._image_lock:
+                self._cached_image_ts = prev_ts
             return cached
 
         try:
@@ -718,6 +736,10 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         except Exception as exc:
             _LOGGER.debug("Thumbnail fetch failed for %s: %s", self.unique_id, exc)
 
+        # Reached on a non-200 response or a GET exception: the refresh failed,
+        # so roll the stamp back to allow the next call to retry.
+        async with self._image_lock:
+            self._cached_image_ts = prev_ts
         return self._cached_image
 
     # ------------------------------------------------------------------ #
@@ -777,7 +799,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             item = await media_source.async_resolve_media(
                 self.hass, media, self.entity_id
             )
-            from homeassistant.components.media_player import (
+            from homeassistant.components.media_player.browse_media import (
                 async_process_play_media_url,
             )
 

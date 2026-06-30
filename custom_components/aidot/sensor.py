@@ -48,7 +48,6 @@ CAMERA_SENSORS: tuple[AidotSensorDescription, ...] = (
     AidotSensorDescription(
         key="sd_card_status",
         translation_key="sd_card_status",
-        icon="mdi:micro-sd",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         get_value=lambda s: s.sd_card_status,

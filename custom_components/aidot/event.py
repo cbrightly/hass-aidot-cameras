@@ -60,6 +60,19 @@ class AidotMotionEvent(EventEntity):
             info, entry.entry_id if entry else None
         )
 
+    @property
+    def available(self) -> bool:
+        """Grey out with the camera (mirrors AidotEntity.available).
+
+        Unlike the other platforms this entity is not a CoordinatorEntity, so it
+        needs its own availability that follows the camera's online state instead
+        of always reporting the last event as available.
+        """
+        if not self._coordinator.last_update_success:
+            return False
+        data = self._coordinator.data
+        return data is not None and getattr(data, "online", True)
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to the coordinator's motion-event stream."""
         # EventEntity is a RestoreEntity: super() restores the last fired event so
@@ -68,6 +81,11 @@ class AidotMotionEvent(EventEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self._coordinator.add_motion_listener(self._on_motion)
+        )
+        # Push state on coordinator updates so the availability above tracks the
+        # camera going on/offline (the entity isn't a CoordinatorEntity).
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
     @callback

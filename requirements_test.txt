@@ -3,3 +3,8 @@ pytest-homeassistant-custom-component
 # turbojpeg at module load; the native lib is only used lazily on JPEG ops, so
 # the Python package alone satisfies the import in tests.
 PyTurboJPEG
+# CI runs `pytest --timeout=30`; declare the plugin explicitly instead of relying
+# on it being a transitive dependency of pytest-homeassistant-custom-component.
+pytest-timeout
+# Coverage measurement/enforcement (CI runs with --cov-fail-under).
+pytest-cov

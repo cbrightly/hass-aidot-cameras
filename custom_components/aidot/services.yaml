@@ -1,22 +1,17 @@
+# Service names, descriptions and field labels live in strings.json under the
+# top-level "services" key (translatable); this file describes structure only.
 talk:
-  name: Talk (two-way audio)
-  description: >-
-    Play an audio clip through an Aidot camera's speaker (push-to-talk / announce).
   target:
     entity:
       integration: aidot
       domain: camera
   fields:
     media:
-      name: Media
-      description: A media-source id or http(s) URL pointing to an audio file.
       required: true
       example: "media-source://media_source/local/doorbell.mp3"
       selector:
         text:
     max_seconds:
-      name: Max seconds
-      description: Maximum talk duration (safety cap).
       required: false
       default: 30
       selector:
@@ -26,18 +21,12 @@ talk:
           unit_of_measurement: seconds
 
 ptz:
-  name: PTZ move
-  description: >-
-    Pan / tilt / zoom an Aidot PTZ camera (model A001064). The camera must be
-    streaming - open the live view first. Use direction "stop" to halt motion.
   target:
     entity:
       integration: aidot
       domain: camera
   fields:
     direction:
-      name: Direction
-      description: Movement direction (or zoom / stop).
       required: true
       example: "left"
       selector:
@@ -55,8 +44,6 @@ ptz:
             - zoom_out
             - stop
     speed:
-      name: Speed
-      description: Movement speed (1 = slow, 8 = fast).
       required: false
       default: 4
       selector:
