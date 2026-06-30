@@ -23,13 +23,13 @@ whole comment with the line below (it publishes with the repo and renders here):
 
 - **Lights** — on/off, brightness, color (RGBW) and color-temperature.
 - **Cameras**
-  - Live **WebRTC** streaming (via go2rtc) and snapshots, LAN-direct when the
+  - **Live WebRTC** streaming (via go2rtc) and snapshots, LAN-direct when the
     camera is on the same network.
   - **Motion / person events** (`event` entity) for automations.
   - **Two-way audio** — play a media clip or URL through the camera speaker.
   - **PTZ** (pan / tilt / zoom) on supported models.
-  - Controls: motion detection, status LED, microphone, floodlight, siren, IR
-    light, auto-tracking, night vision, motion sensitivity, and speaker volume.
+  - **Controls** — motion detection, status LED, microphone, floodlight, siren,
+    IR light, auto-tracking, night vision, motion sensitivity, and speaker volume.
 
 ## Installation (HACS)
 
@@ -39,6 +39,7 @@ whole comment with the line below (it publishes with the repo and renders here):
 3. **Settings → Devices & Services → Add Integration → AiDot**, and sign in with
    your AiDot account.
 
+> [!NOTE]
 > Camera streaming needs **ffmpeg** and (for sub-second browser playback)
 > **go2rtc** — both ship with Home Assistant OS / Container, and go2rtc is
 > bundled with Home Assistant 2026. Without go2rtc the integration falls back to
@@ -49,6 +50,7 @@ Full steps and prerequisites:
 
 ## Quick start: a fast live view
 
+> [!TIP]
 > **Two things decide whether cameras feel fast — set both and you're done:**
 >
 > 1. **Use a WebRTC dashboard card, not the default Picture / Picture Glance
@@ -123,9 +125,13 @@ A few of the most common; the full list is in the
 
 ## Supported devices
 
-Confirmed on AiDot / Leedarson Wi-Fi bulbs, the **M3 Pro (A000088)** and **PTZ
-(A001064)** cameras, and AiDot hubs; other models should work too. Full entity
-list:
+| Category | Confirmed                                              |
+| -------- | ------------------------------------------------------ |
+| Cameras  | M3 Pro (A000088), L2 battery (A001513), PTZ (A001064)  |
+| Lights   | AiDot / Leedarson Wi-Fi bulbs                          |
+| Hubs     | AiDot hubs                                             |
+
+Other models should work too. Full entity list:
 **[Supported devices](https://github.com/cbrightly/hass-aidot-cameras/wiki/Supported-devices)**.
 
 ## License

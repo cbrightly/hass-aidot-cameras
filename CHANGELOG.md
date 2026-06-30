@@ -4,6 +4,19 @@ All notable changes to the AiDot Home Assistant integration are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/); versions
 match the `version` in `custom_components/aidot/manifest.json`.
 
+## [2.7.1]
+
+### Changed
+- **Raised the `python-aidot-cameras` floor to `>=0.10.0`** to pull in the
+  library's security hardening: CSPRNG-generated media-keying material, an
+  SDP-rewrite DoS guard, opt-in DTLS certificate pinning and playback TLS
+  verification, and credential-key separation. No integration code change; the
+  fix installs on restart.
+
+### Documentation
+- **Listed L2 battery cameras (A001513)** in the Supported devices table
+  alongside the M3 Pro (A000088) and PTZ (A001064).
+
 ## [2.6.4]
 
 ### Fixed
