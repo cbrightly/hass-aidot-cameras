@@ -36,7 +36,6 @@ CAMERA_SELECTS: tuple[AidotSelectDescription, ...] = (
     AidotSelectDescription(
         key="night_vision",
         translation_key="night_vision",
-        icon="mdi:weather-night",
         entity_category=EntityCategory.CONFIG,
         options=["auto", "on", "off"],
         get_current_option=lambda s: s.night_vision_mode,
@@ -49,7 +48,6 @@ CAMERA_SELECTS: tuple[AidotSelectDescription, ...] = (
     AidotSelectDescription(
         key="resolution",
         translation_key="resolution",
-        icon="mdi:high-definition",
         entity_category=EntityCategory.CONFIG,
         options=["hd", "sd"],
         get_current_option=None,

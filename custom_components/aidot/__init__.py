@@ -1,5 +1,6 @@
 """The aidot integration."""
 
+import logging
 import os
 
 from homeassistant.const import Platform
@@ -7,6 +8,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_SERVE_PORT_BASE, DOMAIN
 from .coordinator import AidotConfigEntry, AidotDeviceManagerCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -73,8 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
     from .proxy import AidotVideoProxyView
     try:
         hass.http.register_view(AidotVideoProxyView(hass))
-    except Exception:
-        pass  # already registered from a previous entry setup
+    except Exception as exc:  # registration is best-effort
+        # Typically "already registered" from a previous entry setup; log at
+        # debug rather than silently swallowing genuine registration errors.
+        _LOGGER.debug("Aidot video proxy view not registered: %s", exc)
 
     # HA 2026.6 async_process_integration_platforms does not auto-discover
     # media_source.py in custom components, so register it explicitly.
@@ -97,5 +102,11 @@ async def _async_reload_on_options(hass: HomeAssistant, entry: AidotConfigEntry)
 async def async_unload_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Unload a config entry."""
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.async_cleanup()
+    if ok:
+        # Only tear the client/streams down once the platforms have actually
+        # unloaded - a failed platform unload leaves entities live, and they must
+        # not be left pointing at a stopped client.
+        await entry.runtime_data.async_cleanup()
+        # Drop our media-source provider so it doesn't dangle on a dead entry.
+        hass.data.get("media_source", {}).pop(DOMAIN, None)
     return ok

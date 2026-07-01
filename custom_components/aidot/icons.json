@@ -8,10 +8,9 @@
       "motion_detection": {"default": "mdi:motion-sensor"},
       "status_led": {"default": "mdi:led-on"},
       "microphone": {"default": "mdi:microphone"},
-      "floodlight": {"default": "mdi:light-flood-down"},
       "ptz_tracking": {"default": "mdi:radar"},
       "ir_light": {"default": "mdi:led-off"},
-      "siren": {"default": "mdi:alarm-light"}
+      "camera_audio": {"default": "mdi:volume-high"}
     },
     "select": {
       "night_vision": {"default": "mdi:weather-night"},
@@ -28,6 +27,12 @@
       "ptz_stop": {"default": "mdi:stop-circle-outline"},
       "ptz_zoom_in": {"default": "mdi:magnify-plus-outline"},
       "ptz_zoom_out": {"default": "mdi:magnify-minus-outline"}
+    },
+    "light": {
+      "floodlight": {"default": "mdi:light-flood-down"}
+    },
+    "siren": {
+      "siren": {"default": "mdi:alarm-light"}
     }
   }
 }

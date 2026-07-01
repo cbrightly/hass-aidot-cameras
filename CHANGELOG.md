@@ -4,6 +4,63 @@ All notable changes to the AiDot Home Assistant integration are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/); versions
 match the `version` in `custom_components/aidot/manifest.json`.
 
+## [2.8.0]
+
+### Fixed
+- **Recording-clip transcode could corrupt a cached MP4 under concurrent
+  requests.** The per-event proxy lock was evicted using `Lock.locked()`, which
+  reads `False` while a waiter is still queued, so a second request created a
+  fresh lock and two ffmpeg transcodes wrote the same cache file at once
+  (realistic when motion prewarm and a user tap hit the same clip). Locks are now
+  refcounted and removed only when the last holder/waiter leaves.
+- **Token refresh wiped stored credentials.** `token_fresh_cb` replaced the whole
+  config entry with the library's `login_info`, dropping the password and country
+  code the flow stores as extra keys — which broke re-authentication (`KeyError`
+  on the country code) and the headless re-login. The refreshed token is now
+  merged into the existing entry data instead of replacing it.
+- **Re-authentication didn't save the new password and could rebind the entry to
+  a different account.** The reauth step now persists the freshly entered password
+  and aborts if the login resolves to a different AiDot account (matching the
+  reconfigure flow).
+- **A failed snapshot refresh blocked retries for 5 minutes.** `_base_snapshot`
+  stamped its 5-minute cache timestamp before the network fetch and never rolled
+  it back on failure. The timestamp is now only advanced on a successful fetch.
+- **Cleanup ran even when a platform failed to unload**, leaving live entities
+  pointing at a stopped client. The client/stream teardown now runs only on a
+  successful platform unload, and the media-source provider is removed too.
+- **Dual-mode (RGBW + colour-temp) bulbs showed a stale colour mode** after an
+  external change. `color_mode` is now re-derived on every status update.
+- **Orphaned per-device coordinators kept polling** after a device left the
+  account; they are now shut down on removal.
+- **Cache eviction could delete a clip a concurrent request was about to serve**
+  (TOCTOU); eviction now skips the just-finalized file.
+- Motion-event entities now report availability tied to their camera instead of
+  always appearing available.
+- Hardened the recording proxy: dropped plaintext `http` from the ffmpeg protocol
+  whitelist and serialised the hardware-encoder disable flag under its lock.
+- Declared `ffmpeg` in the manifest `after_dependencies`, removed invalid keys
+  from `hacs.json`, and unquoted placeholders in two exception strings so hassfest
+  and HACS validation pass.
+
+### Changed
+- **Entity icons moved out of Python into `icons.json`** (icon translations), so
+  the integration genuinely satisfies the `icon-translations` quality rule.
+- **Service names/descriptions are now translatable** via a `services` block in
+  `strings.json`/`translations/en.json`; `services.yaml` describes structure only.
+- **CI now enforces quality**: ruff, Pyright (strict), hassfest and HACS
+  validation in addition to the tests, and the test job installs the same library
+  floor the integration ships (`>=0.10.0`) instead of an older pin.
+- `quality_scale.yaml` was corrected to reflect reality (`brands` exempt for a
+  custom integration; `test-coverage` in progress).
+
+### Added
+- A comprehensive test suite reaching **100% line coverage** (up from ~38%),
+  enforced by a CI `--cov-fail-under=100` gate: every entity platform, the config
+  flow (incl. reconfigure/DHCP), the proxy view's signature/auth boundary,
+  transcode and cache logic, coordinator device-sync/token/cleanup/auth paths, the
+  media source, diagnostics, and full integration setup/unload. The
+  `test-coverage` quality-scale rule is now met.
+
 ## [2.7.1]
 
 ### Changed

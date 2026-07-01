@@ -1,5 +1,8 @@
 """Constants for the aidot integration."""
 
+from collections.abc import Mapping
+from typing import Any
+
 DOMAIN = "aidot"
 
 # Options
@@ -81,7 +84,7 @@ CONF_ENABLE_LOCAL_CONTROL = "enable_local_control"
 DEFAULT_ENABLE_LOCAL_CONTROL = False
 
 
-def resolve_connection_mode(options: dict) -> str:
+def resolve_connection_mode(options: Mapping[str, Any]) -> str:
     """Resolve the effective connection mode from a config entry's options.
 
     Precedence: an explicit CONF_CONNECTION_MODE wins; otherwise a legacy

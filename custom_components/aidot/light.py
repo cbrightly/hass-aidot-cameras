@@ -69,7 +69,6 @@ class AidotCameraFloodlight(AidotEntity, LightEntity):
     """
 
     _attr_translation_key = "floodlight"
-    _attr_icon = "mdi:light-flood-down"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_color_mode = ColorMode.ONOFF
 
@@ -81,7 +80,9 @@ class AidotCameraFloodlight(AidotEntity, LightEntity):
     def is_on(self) -> bool | None:
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.floodlight
+        # floodlight is a camera-only status field (CameraStatusData), not on the
+        # base DeviceStatusData type the coordinator is generically typed to.
+        return getattr(self.coordinator.data, "floodlight", None)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.async_run_command(
@@ -135,6 +136,20 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         self._attr_brightness = self.coordinator.data.dimming
         self._attr_color_temp_kelvin = self.coordinator.data.cct
         self._attr_rgbw_color = self.coordinator.data.rgbw
+        # Keep color_mode in sync with the device for dual-mode (RGBW + CCT)
+        # bulbs. Previously color_mode only changed inside async_turn_on, so an
+        # external CCT<->colour switch (the app or another HA) left HA on a stale
+        # mode and it rendered the wrong active control (and logged an
+        # attribute/mode-mismatch warning). The device exposes no explicit mode
+        # flag, so infer it: a non-zero R/G/B means colour (RGBW), otherwise
+        # colour-temperature. Single-mode bulbs keep their fixed mode.
+        modes = self._attr_supported_color_modes or set()
+        if ColorMode.RGBW in modes and ColorMode.COLOR_TEMP in modes:
+            rgbw = self.coordinator.data.rgbw
+            if rgbw is not None and any(rgbw[:3]):
+                self._attr_color_mode = ColorMode.RGBW
+            else:
+                self._attr_color_mode = ColorMode.COLOR_TEMP
 
     @property
     def available(self) -> bool:

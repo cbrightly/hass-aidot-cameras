@@ -22,7 +22,7 @@ from aidot.camera.lan_control import (
     CameraLanError,
     discover_subnet,
 )
-from aidot.camera.client import CameraDeviceInformation, CameraStatusData
+from aidot.camera.models import CameraDeviceInformation, CameraStatusData
 from aidot.device_client import DeviceClient, DeviceStatusData
 from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
@@ -275,8 +275,12 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         # cloud "properties" (battery, SD-card, occupancy, motion, night-vision,
         # …) - the reliable source the app reads; cameras don't push these over
         # MQTT.  Also seeds the short-TTL cache the per-camera polls reuse.
-        self._dev_cache = current_cameras
-        self._dev_cache_ts = self.hass.loop.time()
+        # Seed the short-TTL cache under the same lock that guards it in
+        # async_get_camera_device, so a concurrent per-camera fetch can't
+        # interleave with this write.
+        async with self._dev_fetch_lock:
+            self._dev_cache = current_cameras
+            self._dev_cache_ts = self.hass.loop.time()
         for dev_id, device in current_cameras.items():
             coord = self.camera_coordinators.get(dev_id)
             if coord is not None:
@@ -390,6 +394,14 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
                     coord.device_client.async_stop_motion_polling(),
                     name=f"aidot-stop-motion-{dev_id}",
                 )
+            # Shut the orphaned per-device coordinator down so its periodic
+            # refresh timer stops firing - otherwise it keeps polling a device
+            # that has left the account until the next full entry reload.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                coord.async_shutdown(),
+                name=f"aidot-shutdown-coordinator-{dev_id}",
+            )
         if removed:
             self._purge_deleted_entries()
         for dev_id, device in current.items():
@@ -444,8 +456,15 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         await self.client.async_cleanup()
 
     def token_fresh_cb(self) -> None:
+        # Merge the refreshed token INTO the existing entry data - never replace
+        # it wholesale. The config flow stores CONF_PASSWORD / CONF_COUNTRY_CODE
+        # (and CONF_USERNAME) as extra keys that the library's login_info does not
+        # carry; reauth and the headless re-login read them back. A wholesale
+        # ``data=login_info.copy()`` would erase those keys on every token refresh
+        # and break reauth (KeyError on CONF_COUNTRY_CODE) and auto-relogin.
         self.hass.config_entries.async_update_entry(
-            self.config_entry, data=self.client.login_info.copy()
+            self.config_entry,
+            data={**self.config_entry.data, **self.client.login_info},
         )
 
     async def async_auto_login(self) -> None:

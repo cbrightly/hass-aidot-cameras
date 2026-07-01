@@ -35,7 +35,6 @@ CAMERA_SWITCHES: tuple[AidotSwitchDescription, ...] = (
     AidotSwitchDescription(
         key="motion_detection",
         translation_key="motion_detection",
-        icon="mdi:motion-sensor",
         get_is_on=lambda s: s.motion_detection,
         async_turn_on_fn=lambda c: c.async_set_motion_detection(True),
         async_turn_off_fn=lambda c: c.async_set_motion_detection(False),
@@ -43,7 +42,6 @@ CAMERA_SWITCHES: tuple[AidotSwitchDescription, ...] = (
     AidotSwitchDescription(
         key="status_led",
         translation_key="status_led",
-        icon="mdi:led-on",
         entity_category=EntityCategory.CONFIG,
         get_is_on=lambda s: s.status_led,
         async_turn_on_fn=lambda c: c.async_set_status_led(True),
@@ -52,7 +50,6 @@ CAMERA_SWITCHES: tuple[AidotSwitchDescription, ...] = (
     AidotSwitchDescription(
         key="microphone",
         translation_key="microphone",
-        icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
         get_is_on=lambda s: s.microphone,
         async_turn_on_fn=lambda c: c.async_set_microphone(True),
@@ -64,7 +61,6 @@ CAMERA_SWITCHES: tuple[AidotSwitchDescription, ...] = (
     AidotSwitchDescription(
         key="ptz_tracking",
         translation_key="ptz_tracking",
-        icon="mdi:radar",
         entity_category=EntityCategory.CONFIG,
         get_is_on=lambda s: s.ptz_tracking,
         async_turn_on_fn=lambda c: c.async_set_ptz_tracking(True),
@@ -73,7 +69,6 @@ CAMERA_SWITCHES: tuple[AidotSwitchDescription, ...] = (
     AidotSwitchDescription(
         key="ir_light",
         translation_key="ir_light",
-        icon="mdi:led-off",
         entity_category=EntityCategory.CONFIG,
         get_is_on=lambda s: s.ir_light,
         async_turn_on_fn=lambda c: c.async_set_ir_light(True),
@@ -161,7 +156,6 @@ class AidotCameraAudioSwitch(AidotEntity, SwitchEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "camera_audio"
-    _attr_icon = "mdi:volume-high"
     _attr_entity_category = EntityCategory.CONFIG
 
     coordinator: AidotCameraUpdateCoordinator

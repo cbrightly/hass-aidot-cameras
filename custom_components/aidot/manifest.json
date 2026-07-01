@@ -2,6 +2,7 @@
   "domain": "aidot",
   "name": "AiDot",
   "after_dependencies": [
+    "ffmpeg",
     "go2rtc"
   ],
   "codeowners": [
@@ -24,5 +25,5 @@
   "requirements": [
     "python-aidot-cameras[webrtc]>=0.10.0"
   ],
-  "version": "2.7.1"
+  "version": "2.8.0"
 }

@@ -41,7 +41,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_up",
         translation_key="ptz_up",
-        icon="mdi:arrow-up-circle-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("up"),
@@ -49,7 +48,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_down",
         translation_key="ptz_down",
-        icon="mdi:arrow-down-circle-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("down"),
@@ -57,7 +55,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_left",
         translation_key="ptz_left",
-        icon="mdi:arrow-left-circle-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("left"),
@@ -65,7 +62,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_right",
         translation_key="ptz_right",
-        icon="mdi:arrow-right-circle-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("right"),
@@ -73,7 +69,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_stop",
         translation_key="ptz_stop",
-        icon="mdi:stop-circle-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_stop(),
@@ -81,7 +76,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_zoom_in",
         translation_key="ptz_zoom_in",
-        icon="mdi:magnify-plus-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("zoom_in"),
@@ -89,7 +83,6 @@ PTZ_BUTTONS: tuple[AidotButtonDescription, ...] = (
     AidotButtonDescription(
         key="ptz_zoom_out",
         translation_key="ptz_zoom_out",
-        icon="mdi:magnify-minus-outline",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         async_press_fn=lambda c: c.async_ptz_move("zoom_out"),

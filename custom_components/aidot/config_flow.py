@@ -217,8 +217,21 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 assert login_info is not None
+                # Guard against reauthenticating into a *different* AiDot account,
+                # which would silently rebind this entry to someone else's tokens
+                # (the reconfigure flow has the same guard).
+                await self.async_set_unique_id(login_info[CONF_ID])
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                # Persist the freshly entered password (and keep the country) so the
+                # next headless re-login uses current credentials. login_info carries
+                # neither key, and data_updates only merges what we pass.
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=login_info
+                    reauth_entry,
+                    data_updates={
+                        **login_info,
+                        CONF_COUNTRY_CODE: reauth_entry.data[CONF_COUNTRY_CODE],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
                 )
 
         return self.async_show_form(

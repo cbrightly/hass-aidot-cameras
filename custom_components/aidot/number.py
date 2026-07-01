@@ -28,7 +28,6 @@ CAMERA_NUMBERS: tuple[AidotNumberDescription, ...] = (
     AidotNumberDescription(
         key="motion_sensitivity",
         translation_key="motion_sensitivity",
-        icon="mdi:motion-sensor",
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
         native_max_value=5,
@@ -40,7 +39,6 @@ CAMERA_NUMBERS: tuple[AidotNumberDescription, ...] = (
     AidotNumberDescription(
         key="speaker_volume",
         translation_key="speaker_volume",
-        icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=100,

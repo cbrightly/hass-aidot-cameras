@@ -1,5 +1,6 @@
 # AiDot for Home Assistant
 
+[![CI](https://github.com/cbrightly/hass-aidot-cameras/actions/workflows/ci.yml/badge.svg)](https://github.com/cbrightly/hass-aidot-cameras/actions/workflows/ci.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![Release](https://img.shields.io/github/v/release/cbrightly/hass-aidot-cameras)](https://github.com/cbrightly/hass-aidot-cameras/releases)
 [![License: MIT](https://img.shields.io/github/license/cbrightly/hass-aidot-cameras)](LICENSE)

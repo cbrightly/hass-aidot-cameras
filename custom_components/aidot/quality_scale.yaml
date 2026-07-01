@@ -1,8 +1,13 @@
+# This file is the roadmap toward each tier; manifest.json declares the tier
+# actually achieved (bronze). Rules not yet genuinely met are marked todo/exempt
+# rather than done so the scorecard reflects reality.
 rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands: done
+  brands:
+    status: exempt
+    comment: HACS custom integration; not eligible for the home-assistant/brands repo.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

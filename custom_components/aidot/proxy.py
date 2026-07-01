@@ -76,7 +76,7 @@ _INPUT_ARGS = (
     "-fflags", "+nobuffer",
     "-analyzeduration", "2000000",
     "-probesize", "2000000",
-    "-protocol_whitelist", "https,tls,tcp,crypto,http",
+    "-protocol_whitelist", "https,tls,tcp,crypto",
 )
 # Output args shared by every plan: write a complete +faststart MP4 so
 # FileResponse can serve it with Range (required by WebKit for <video>).
@@ -109,6 +109,32 @@ _HW_LOCK = asyncio.Lock()
 # One transcode at a time per event so concurrent plays share a cache entry
 # instead of racing two ffmpeg runs onto the same file.
 _EVENT_LOCKS: dict[str, asyncio.Lock] = {}
+_EVENT_LOCK_REFS: dict[str, int] = {}
+
+
+def _acquire_event_lock(key: str) -> asyncio.Lock:
+    """Get-or-create the per-event lock and bump its refcount.
+
+    Refcounted (not locked()-based) eviction: the increment happens
+    synchronously at call time, before any await, so a waiter already holds a
+    ref and the lock is never popped out from under it (which would let two
+    transcodes run for the same event).
+    """
+    lock = _EVENT_LOCKS.get(key)
+    if lock is None:
+        lock = _EVENT_LOCKS[key] = asyncio.Lock()
+    _EVENT_LOCK_REFS[key] = _EVENT_LOCK_REFS.get(key, 0) + 1
+    return lock
+
+
+def _release_event_lock(key: str) -> None:
+    """Drop one ref; remove the lock only when the last holder/waiter leaves."""
+    remaining = _EVENT_LOCK_REFS.get(key, 0) - 1
+    if remaining <= 0:
+        _EVENT_LOCK_REFS.pop(key, None)
+        _EVENT_LOCKS.pop(key, None)
+    else:
+        _EVENT_LOCK_REFS[key] = remaining
 
 # Cap concurrent cold transcodes so several clips opened at once can't pin the
 # CPU (each cold clip runs an ffmpeg).  Generous default - rarely blocks; caps
@@ -278,10 +304,10 @@ class AidotVideoProxyView(HomeAssistantView):
         cache_path = os.path.join(self._cache_dir, f"{_cache_name(event)}_hevc.mp4")
         if await self.hass.async_add_executor_job(_touch_if_usable, cache_path):
             return
-        lock = _EVENT_LOCKS.setdefault(lock_key, asyncio.Lock())
-        if lock.locked():
-            return  # a play or another warm is already handling it
+        lock = _acquire_event_lock(lock_key)
         try:
+            if lock.locked():
+                return  # a play or another warm is already handling it
             async with lock:
                 if await self.hass.async_add_executor_job(_is_usable, cache_path):
                     return
@@ -290,8 +316,7 @@ class AidotVideoProxyView(HomeAssistantView):
         except Exception as exc:
             _LOGGER.debug("aidot clip prewarm failed for %s: %s", event, exc)
         finally:
-            if not lock.locked():
-                _EVENT_LOCKS.pop(lock_key, None)
+            _release_event_lock(lock_key)
 
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Serve an MP4 for the requested event clip.
@@ -327,7 +352,7 @@ class AidotVideoProxyView(HomeAssistantView):
         if await self.hass.async_add_executor_job(_touch_if_usable, cache_path):
             return web.FileResponse(cache_path)
 
-        lock = _EVENT_LOCKS.setdefault(lock_key, asyncio.Lock())
+        lock = _acquire_event_lock(lock_key)
         try:
             async with lock:
                 # Another request may have produced it while we waited for the lock.
@@ -343,8 +368,7 @@ class AidotVideoProxyView(HomeAssistantView):
                 return web.FileResponse(cache_path)
         finally:
             # Bound _EVENT_LOCKS growth: drop once nobody else holds or awaits it.
-            if not lock.locked():
-                _EVENT_LOCKS.pop(lock_key, None)
+            _release_event_lock(lock_key)
 
     async def _transcode_to_cache(
         self, device_id: str, event: str, cache_path: str, *, hevc: bool = False
@@ -412,7 +436,8 @@ class AidotVideoProxyView(HomeAssistantView):
                             # fails every time - stop offering it so we don't waste a
                             # spawn per clip.  libx264 still handles it.
                             global _hw_plan
-                            _hw_plan = []
+                            async with _HW_LOCK:
+                                _hw_plan = []
                             _LOGGER.info(
                                 "aidot clip: disabling HW encoder %s for this session "
                                 "(unusable); using libx264", plan_name,
@@ -544,10 +569,12 @@ def _finalize(
     tmp_path: str, cache_path: str, cache_dir: str, max_bytes: int, max_age: float
 ) -> None:
     os.replace(tmp_path, cache_path)
-    _enforce_cache_limits(cache_dir, max_bytes, max_age)
+    _enforce_cache_limits(cache_dir, max_bytes, max_age, keep=cache_path)
 
 
-def _enforce_cache_limits(cache_dir: str, max_bytes: int, max_age: float) -> None:
+def _enforce_cache_limits(
+    cache_dir: str, max_bytes: int, max_age: float, keep: str | None = None
+) -> None:
     try:
         entries = []
         now = time.time()
@@ -560,16 +587,19 @@ def _enforce_cache_limits(cache_dir: str, max_bytes: int, max_age: float) -> Non
                 st = os.stat(full)
             except OSError:
                 continue
-            # Age eviction.
-            if now - st.st_mtime > max_age:
+            # Age eviction.  Never evict the path we were just asked to keep (a
+            # request validated it and is about to serve it - a TOCTOU unlink).
+            if full != keep and now - st.st_mtime > max_age:
                 _unlink(full)
                 continue
             entries.append((st.st_mtime, st.st_size, full))
             total += st.st_size
-        # Size eviction: drop oldest until under budget.
+        # Size eviction: drop oldest until under budget (skip the kept path).
         for _mtime, size, full in sorted(entries):
             if total <= max_bytes:
                 break
+            if full == keep:
+                continue
             _unlink(full)
             total -= size
     except OSError:
