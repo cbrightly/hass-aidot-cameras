@@ -15,7 +15,7 @@ match the `version` in `custom_components/aidot/manifest.json`.
   refcounted and removed only when the last holder/waiter leaves.
 - **Token refresh wiped stored credentials.** `token_fresh_cb` replaced the whole
   config entry with the library's `login_info`, dropping the password and country
-  code the flow stores as extra keys — which broke re-authentication (`KeyError`
+  code the flow stores as extra keys - which broke re-authentication (`KeyError`
   on the country code) and the headless re-login. The refreshed token is now
   merged into the existing entry data instead of replacing it.
 - **Re-authentication didn't save the new password and could rebind the entry to
@@ -81,8 +81,8 @@ match the `version` in `custom_components/aidot/manifest.json`.
   Advanced Camera Card with `live.provider: go2rtc`. For a non-Frigate camera the
   card resolves no go2rtc stream unless `live.go2rtc.url` and `live.go2rtc.stream`
   are set by hand, so tiles pinned to bare `go2rtc` start inconsistently or never
-  start. The guidance now uses `provider: ha` — the native Home Assistant path
-  this integration already wires to go2rtc WebRTC — and adds a static `16:9`
+  start. The guidance now uses `provider: ha` - the native Home Assistant path
+  this integration already wires to go2rtc WebRTC - and adds a static `16:9`
   `dimensions` block so tiles keep a fixed size instead of ballooning when a
   stream reconnects. Documentation only; no code change.
 
@@ -103,7 +103,7 @@ match the `version` in `custom_components/aidot/manifest.json`.
   source already used the public slug, it double-appended, so the shipped
   `manifest.json` (the **Documentation** / **Report issue** buttons in Home
   Assistant) and the HACS install step pointed at a non-existent
-  `…/hass-aidot-cameras-cameras` URL. The rewrite now optionally consumes an
+  `.../hass-aidot-cameras-cameras` URL. The rewrite now optionally consumes an
   existing `-cameras` suffix, and the published links resolve correctly.
 
 ## [2.6.1]
@@ -120,7 +120,7 @@ Hygiene, robustness, and a security fix; no change to streaming behaviour.
 ### Security
 - **Clip-playback proxy URLs are now signed.** The `/api/aidot/video` view is
   unauthenticated (the media-browser `<video>` element sends no HA auth), so it
-  was gated only by the unguessable event id — replayable indefinitely. The
+  was gated only by the unguessable event id - replayable indefinitely. The
   media source now mints a URL signed with an HMAC over `device + event +
   expiry` (per-process secret, never persisted), verified in the view with a
   constant-time compare and a 6 h expiry.
@@ -131,7 +131,7 @@ Hygiene, robustness, and a security fix; no change to streaming behaviour.
   **`loggers: ["aidot"]`** added so HA can surface the library logger in the UI.
 - **Coordinator background tasks** (LAN-control attach, stop-streaming /
   stop-motion on device removal, per-coordinator init) moved from
-  `hass.async_create_task` to `config_entry.async_create_background_task` — now
+  `hass.async_create_task` to `config_entry.async_create_background_task` - now
   tracked, named in diagnostics, and cancelled on entry unload.
 - **Library floor raised to `>=0.9.1`** (camera-log fix + dependency floors).
 
@@ -146,4 +146,4 @@ Hygiene, robustness, and a security fix; no change to streaming behaviour.
 Baseline release prior to this changelog: go2rtc WebRTC streaming for AiDot /
 Leedarson cameras (DTLS + SDES paths), L2 battery-camera support via cloud
 pre-connect, two-way audio, PTZ, cloud event-clip playback, and the camera
-control entities (siren, floodlight, night vision, motion sensitivity, …).
+control entities (siren, floodlight, night vision, motion sensitivity, ...).

@@ -267,7 +267,7 @@ async def test_stream_source_dtls_waiter_exception_still_returns_url():
     )
     assert await cam.stream_source() == "rtsp://go2rtc/x"
     cam.coordinator.device_client.async_wait_serve_ready.assert_awaited_once()
-    # connected → the "Connecting…/Negotiating…" overlay is cleared.
+    # connected -> the "Connecting.../Negotiating..." overlay is cleared.
     assert cam._stream_status is None
 
 
@@ -293,7 +293,7 @@ async def test_await_serve_listening_times_out():
         "custom_components.aidot.camera.asyncio.sleep", new=AsyncMock()
     ) as sleeper, patch(
         "custom_components.aidot.camera.time.monotonic",
-        side_effect=[1000.0, 1006.0],  # deadline=1005; next check 1006 ≥ 1005
+        side_effect=[1000.0, 1006.0],  # deadline=1005; next check 1006 >= 1005
     ):
         assert await cam._await_serve_listening(12345, timeout=5.0) is False
     sleeper.assert_not_awaited()
@@ -307,7 +307,7 @@ async def test_await_serve_listening_sleeps_between_misses_then_binds():
         "custom_components.aidot.camera.asyncio.sleep", new=AsyncMock()
     ) as sleeper, patch(
         "custom_components.aidot.camera.time.monotonic",
-        side_effect=[1000.0, 1001.0],  # deadline=1005; still before it → sleep
+        side_effect=[1000.0, 1001.0],  # deadline=1005; still before it -> sleep
     ):
         assert await cam._await_serve_listening(12345, timeout=5.0) is True
     sleeper.assert_awaited_once()
@@ -331,7 +331,7 @@ def test_serve_port_listening_false_when_port_free(socket_enabled):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(("127.0.0.1", 0))
     port = s.getsockname()[1]
-    s.close()  # release it → probe should bind cleanly
+    s.close()  # release it -> probe should bind cleanly
     assert AidotCamera._serve_port_listening(port) is False
 
 
@@ -352,8 +352,8 @@ def test_extra_state_attributes_none_when_no_status():
 
 def test_extra_state_attributes_exposes_active_status():
     cam = _make_camera()
-    cam._set_stream_status("Connecting…")  # async_write_ha_state is swallowed
-    assert cam.extra_state_attributes == {"stream_status": "Connecting…"}
+    cam._set_stream_status("Connecting...")  # async_write_ha_state is swallowed
+    assert cam.extra_state_attributes == {"stream_status": "Connecting..."}
 
 
 # --------------------------------------------------------------------------- #
@@ -363,7 +363,7 @@ async def test_async_talk_builds_and_streams_frames():
     cam = _make_camera()
     cam._resolve_media = AsyncMock(return_value="http://x/a.mp3")
     n = camera_mod.TALK_PCM_FRAME_BYTES
-    pcm = b"\x01" * (2 * n + 5)  # → 3 frames, last one padded to n
+    pcm = b"\x01" * (2 * n + 5)  # -> 3 frames, last one padded to n
     cam._decode_pcm_8k = AsyncMock(return_value=pcm)
 
     collected: list = []

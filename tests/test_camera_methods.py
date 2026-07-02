@@ -62,7 +62,7 @@ async def test_base_snapshot_returns_cached_within_ttl():
     cam = _make_camera()
     cam._cached_image = b"cached"
     with patch("custom_components.aidot.camera.time.monotonic", return_value=1000.0):
-        cam._cached_image_ts = 1000.0  # diff 0 < 300 → serve cache, no cloud hit
+        cam._cached_image_ts = 1000.0  # diff 0 < 300 -> serve cache, no cloud hit
         result = await cam._base_snapshot()
     assert result == b"cached"
     cam.coordinator.device_client.async_get_latest_thumbnail.assert_not_called()
@@ -161,7 +161,7 @@ async def test_publish_to_go2rtc_returns_none_when_disabled():
 async def test_publish_to_go2rtc_returns_none_when_unreachable():
     cam = _make_camera()
     client = MagicMock()
-    client.ensure_stream = AsyncMock(return_value=False)  # go2rtc down → PUT fails
+    client.ensure_stream = AsyncMock(return_value=False)  # go2rtc down -> PUT fails
     p1, p2, p3 = _patch_go2rtc(client)
     with p1, p2, p3:
         assert await cam._publish_to_go2rtc("http://x") is None

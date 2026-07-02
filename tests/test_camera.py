@@ -235,8 +235,8 @@ def test_active_status_expires_error_text_after_ttl():
 def test_active_status_keeps_fresh_text():
     cam = _make_camera()
     with patch("custom_components.aidot.camera.time.monotonic", return_value=500.0):
-        cam._set_stream_status("Connecting…")
-        assert cam._active_status() == "Connecting…"
+        cam._set_stream_status("Connecting...")
+        assert cam._active_status() == "Connecting..."
 
 
 # --------------------------------------------------------------------------- #

@@ -265,7 +265,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         a fresh source and restarts the keepalive.
 
         Fires only when the keepalive is genuinely gone
-        (``stream_rtsp_url is None`` ⇒ not ``_streaming_active``): never during a
+        (``stream_rtsp_url is None`` => not ``_streaming_active``): never during a
         live view or a transient session reconnect (those keep the keepalive - and
         thus the serve URL - alive, so HA's reconnect will succeed on its own).
         While the keepalive reports active we leave the Stream alone even if the
@@ -398,7 +398,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         # Fetch bytes first so the HA camera proxy can serve them immediately
         # on first request.  We do NOT expose the raw CDN URL as entity_picture
         # because CDN URLs expire and produce a broken icon.  Instead we let HA
-        # return its own proxy URL (ENTITY_IMAGE_URL → async_camera_image()).
+        # return its own proxy URL (ENTITY_IMAGE_URL -> async_camera_image()).
         try:
             session = async_get_clientsession(self.hass)
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
@@ -439,7 +439,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         camera advertises WebRTC even on a cold first view. Re-registers on every
         call (the PUT is idempotent and cheap) so it self-heals if go2rtc restarts
         and drops the stream def. Best-effort via the library's ``Go2rtcClient``:
-        returns ``None`` (→ caller falls back to the HLS serve) if go2rtc is
+        returns ``None`` (-> caller falls back to the HLS serve) if go2rtc is
         unreachable. No separate availability probe: ``ensure_stream``'s PUT
         fast-fails when go2rtc is down, keeping HA's per-camera setup check fast.
         """
@@ -452,7 +452,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         if not await client.ensure_stream(name, serve_url):
             return None
         rtsp = client.rtsp_url(name)
-        _LOGGER.debug("Registered %s with go2rtc → %s (WebRTC)", self._rtsp_name, rtsp)
+        _LOGGER.debug("Registered %s with go2rtc -> %s (WebRTC)", self._rtsp_name, rtsp)
         return rtsp
 
     async def _unpublish_from_go2rtc(self) -> None:
@@ -494,7 +494,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             # its scheme. Returning None made it conclude HLS-only and cache that,
             # so these cameras never used go2rtc WebRTC (slow HLS vs the app's
             # instant WebRTC). Instead register the go2rtc stream def and return
-            # its RTSP URL: HA's go2rtc provider sees RTSP → enables WebRTC. No
+            # its RTSP URL: HA's go2rtc provider sees RTSP -> enables WebRTC. No
             # keepalive is started here (go2rtc pulls lazily when a viewer
             # connects; the real view starts the serve), so setup stays fast.
             # Falls back to None (HLS) when go2rtc is unavailable.
@@ -504,7 +504,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         serve_url = self._serve_url
         connected = False
         cancelled = False
-        self._set_stream_status("Connecting…")
+        self._set_stream_status("Connecting...")
         try:
             if dc.stream_rtsp_url is None:
                 try:
@@ -515,7 +515,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
                         **self._connect_options(),
                     )
                     _LOGGER.info(
-                        "Started HTTP stream serve for %s → %s (connection mode: %s)",
+                        "Started HTTP stream serve for %s -> %s (connection mode: %s)",
                         self._rtsp_name, serve_url, resolve_connection_mode(_opts),
                     )
                 except Exception as exc:
@@ -541,7 +541,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
                 # SDES binds its -listen serve socket only after the SCTP handshake
                 # + first media demux (a 25-70s cold start) - far past HA's 10s
                 # stream_source timeout.  Blocking for the bind (the old behaviour)
-                # gets cancelled at 10s and returns None → snapshot with no retry,
+                # gets cancelled at 10s and returns None -> snapshot with no retry,
                 # which is the live-view failure users hit on a cold camera.  So
                 # mirror the proven DTLS path: probe briefly with a try-bind (a warm
                 # session returns instantly; the probe never connects, so it can't
@@ -551,7 +551,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
                 # first view becomes a spinner that resolves to video instead of a
                 # still image.  The serve is verified to produce valid H.264 once
                 # bound, so the worker connects to a good stream.
-                self._set_stream_status("Buffering…")
+                self._set_stream_status("Buffering...")
                 await self._await_serve_listening(_serve_port(self._rtsp_name), timeout=7.0)
                 connected = True
                 return publish_url
@@ -560,7 +560,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             # cold session needs ~15-21s (ICE/DTLS + first keyframe + ffmpeg bind)
             # - far past HA's 10s CAMERA_STREAM_SOURCE_TIMEOUT.  Blocking here for
             # readiness therefore *guarantees* the first press fails (HA cancels
-            # stream_source at 10s → CancelledError).  So instead return the URL
+            # stream_source at 10s -> CancelledError).  So instead return the URL
             # fast: a warm session is already bound (the short wait returns ready
             # instantly), and a cold one hands HA the URL before the port is up.
             # HA's stream_worker tolerates the transient "connection refused" - it
@@ -573,9 +573,9 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             # trim - that removed the library-side gating itself; this keeps it.)
             waiter = getattr(dc, "async_wait_serve_ready", None)
             if waiter is not None:
-                self._set_stream_status("Negotiating…")
+                self._set_stream_status("Negotiating...")
                 try:
-                    # Warm → returns ready instantly; cold → falls through after the
+                    # Warm -> returns ready instantly; cold -> falls through after the
                     # short wait and we hand HA the URL anyway (under the 10s cutoff).
                     await waiter(timeout=7.0)
                 except Exception:
@@ -595,7 +595,7 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
                 # Any non-success exit (timeout, exception) that didn't already
                 # set an error: surface a soft "retrying" status attribute.
                 self._set_stream_status(
-                    "Camera unavailable - retrying…", error=True
+                    "Camera unavailable - retrying...", error=True
                 )
 
     @staticmethod
@@ -611,9 +611,9 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.bind(("127.0.0.1", port))
-            return False  # bound cleanly → port free → not listening yet
+            return False  # bound cleanly -> port free -> not listening yet
         except OSError:
-            return True  # EADDRINUSE → ffmpeg is listening
+            return True  # EADDRINUSE -> ffmpeg is listening
         finally:
             s.close()
 

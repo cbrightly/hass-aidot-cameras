@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/github/license/cbrightly/hass-aidot-cameras)](LICENSE)
 
 A Home Assistant custom integration for **AiDot / Leedarson** Wi-Fi lights **and
-cameras** — live WebRTC video, two-way audio, PTZ, motion events, and the usual
+cameras** - live WebRTC video, two-way audio, PTZ, motion events, and the usual
 light controls. It is a camera-capable fork of the upstream lights-only
 [AiDot-Development-Team/hass-AiDot](https://github.com/AiDot-Development-Team/hass-AiDot).
 
@@ -15,34 +15,34 @@ lives in the [`python-aidot-cameras`](https://github.com/cbrightly/python-aidot-
 library, which it installs automatically.
 
 <!--
-Hero screenshot slot — add a PNG at docs/hero.png in this repo, then replace this
+Hero screenshot slot - add a PNG at docs/hero.png in this repo, then replace this
 whole comment with the line below (it publishes with the repo and renders here):
 <p align="center"><img src="docs/hero.png" alt="AiDot cameras on a Home Assistant dashboard" width="760"></p>
 -->
 
 ## Features
 
-- **Lights** — on/off, brightness, color (RGBW) and color-temperature.
+- **Lights** - on/off, brightness, color (RGBW) and color-temperature.
 - **Cameras**
   - **Live WebRTC** streaming (via go2rtc) and snapshots, LAN-direct when the
     camera is on the same network.
   - **Motion / person events** (`event` entity) for automations.
-  - **Two-way audio** — play a media clip or URL through the camera speaker.
+  - **Two-way audio** - play a media clip or URL through the camera speaker.
   - **PTZ** (pan / tilt / zoom) on supported models.
-  - **Controls** — motion detection, status LED, microphone, floodlight, siren,
+  - **Controls** - motion detection, status LED, microphone, floodlight, siren,
     IR light, auto-tracking, night vision, motion sensitivity, and speaker volume.
 
 ## Installation (HACS)
 
-1. In HACS → ⋮ → **Custom repositories**, add
+1. In HACS -> ... -> **Custom repositories**, add
    `https://github.com/cbrightly/hass-aidot-cameras` with category **Integration**.
 2. Search for **AiDot**, **Download** it, then restart Home Assistant.
-3. **Settings → Devices & Services → Add Integration → AiDot**, and sign in with
+3. **Settings -> Devices & Services -> Add Integration -> AiDot**, and sign in with
    your AiDot account.
 
 > [!NOTE]
 > Camera streaming needs **ffmpeg** and (for sub-second browser playback)
-> **go2rtc** — both ship with Home Assistant OS / Container, and go2rtc is
+> **go2rtc** - both ship with Home Assistant OS / Container, and go2rtc is
 > bundled with Home Assistant 2026. Without go2rtc the integration falls back to
 > higher-latency HLS.
 
@@ -52,14 +52,14 @@ Full steps and prerequisites:
 ## Quick start: a fast live view
 
 > [!TIP]
-> **Two things decide whether cameras feel fast — set both and you're done:**
+> **Two things decide whether cameras feel fast - set both and you're done:**
 >
 > 1. **Use a WebRTC dashboard card, not the default Picture / Picture Glance
 >    card.** The Picture card plays through Home Assistant's **HLS** dialog (the
 >    ~20 s scrubber buffer), so the first frame is seconds away on *every* view.
 > 2. **The first view of an idle camera is slow on purpose.** Opening a cold
->    camera runs a one-time connection handshake — roughly **15–21 s** for mains
->    cameras and up to **~70 s** for battery models — then go2rtc **WebRTC** takes
+>    camera runs a one-time connection handshake - roughly **15-21 s** for mains
+>    cameras and up to **~70 s** for battery models - then go2rtc **WebRTC** takes
 >    over and that camera is **sub-second** for every later view.
 >
 > So a slow *first* frame is expected; a slow *every* frame almost always means
@@ -92,23 +92,23 @@ Full card options, multi-camera walls, and the host-resource notes are in
 
 The **[Wiki](https://github.com/cbrightly/hass-aidot-cameras/wiki)** is the full reference:
 
-- **Getting started** —
-  [Installation](https://github.com/cbrightly/hass-aidot-cameras/wiki/Installation) ·
-  [Configuration options](https://github.com/cbrightly/hass-aidot-cameras/wiki/Configuration-options) ·
+- **Getting started** -
+  [Installation](https://github.com/cbrightly/hass-aidot-cameras/wiki/Installation) -
+  [Configuration options](https://github.com/cbrightly/hass-aidot-cameras/wiki/Configuration-options) -
   [Supported devices](https://github.com/cbrightly/hass-aidot-cameras/wiki/Supported-devices)
-- **Cameras** —
-  [Overview](https://github.com/cbrightly/hass-aidot-cameras/wiki/Cameras) ·
-  [Dashboard cards](https://github.com/cbrightly/hass-aidot-cameras/wiki/Dashboard-cards) ·
-  [PTZ control](https://github.com/cbrightly/hass-aidot-cameras/wiki/PTZ-control) ·
-  [Two-way audio](https://github.com/cbrightly/hass-aidot-cameras/wiki/Two-way-audio) ·
-  [Resolution](https://github.com/cbrightly/hass-aidot-cameras/wiki/Resolution) ·
+- **Cameras** -
+  [Overview](https://github.com/cbrightly/hass-aidot-cameras/wiki/Cameras) -
+  [Dashboard cards](https://github.com/cbrightly/hass-aidot-cameras/wiki/Dashboard-cards) -
+  [PTZ control](https://github.com/cbrightly/hass-aidot-cameras/wiki/PTZ-control) -
+  [Two-way audio](https://github.com/cbrightly/hass-aidot-cameras/wiki/Two-way-audio) -
+  [Resolution](https://github.com/cbrightly/hass-aidot-cameras/wiki/Resolution) -
   [Cloud recordings](https://github.com/cbrightly/hass-aidot-cameras/wiki/Cloud-recordings)
-- **Using it** —
-  [Automation examples](https://github.com/cbrightly/hass-aidot-cameras/wiki/Automation-examples) ·
+- **Using it** -
+  [Automation examples](https://github.com/cbrightly/hass-aidot-cameras/wiki/Automation-examples) -
   [Services reference](https://github.com/cbrightly/hass-aidot-cameras/wiki/Services)
-- **Help** —
-  [Troubleshooting](https://github.com/cbrightly/hass-aidot-cameras/wiki/Troubleshooting) ·
-  [Known limitations](https://github.com/cbrightly/hass-aidot-cameras/wiki/Known-limitations) ·
+- **Help** -
+  [Troubleshooting](https://github.com/cbrightly/hass-aidot-cameras/wiki/Troubleshooting) -
+  [Known limitations](https://github.com/cbrightly/hass-aidot-cameras/wiki/Known-limitations) -
   [FAQ](https://github.com/cbrightly/hass-aidot-cameras/wiki/FAQ)
 
 ## Troubleshooting
@@ -116,13 +116,13 @@ The **[Wiki](https://github.com/cbrightly/hass-aidot-cameras/wiki)** is the full
 A few of the most common; the full list is in the
 **[Troubleshooting](https://github.com/cbrightly/hass-aidot-cameras/wiki/Troubleshooting)** wiki:
 
-- **Stream is slow / buffers like HLS** — use a WebRTC card (above) and confirm
-  **go2rtc is running** (Settings → Add-ons → go2rtc). Without go2rtc, all views
+- **Stream is slow / buffers like HLS** - use a WebRTC card (above) and confirm
+  **go2rtc is running** (Settings -> Add-ons -> go2rtc). Without go2rtc, all views
   fall back to HLS.
-- **"Camera must be streaming" on PTZ / resolution / `aidot.talk`** — open the
+- **"Camera must be streaming" on PTZ / resolution / `aidot.talk`** - open the
   live view first; those commands ride the active stream session.
-- **Authentication error / integration keeps reloading** — re-enter your AiDot
-  credentials via **AiDot → Reconfigure**.
+- **Authentication error / integration keeps reloading** - re-enter your AiDot
+  credentials via **AiDot -> Reconfigure**.
 
 ## Supported devices
 
@@ -137,5 +137,5 @@ Other models should work too. Full entity list:
 
 ## License
 
-MIT — see [LICENSE](LICENSE). This integration is not affiliated with or endorsed
+MIT - see [LICENSE](LICENSE). This integration is not affiliated with or endorsed
 by AiDot or Leedarson; it is community-maintained and provided as-is.
