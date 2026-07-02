@@ -25,5 +25,5 @@
   "requirements": [
     "python-aidot-cameras[webrtc]>=0.10.0"
   ],
-  "version": "2.8.0"
+  "version": "2.8.1"
 }

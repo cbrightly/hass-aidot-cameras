@@ -4,6 +4,21 @@ All notable changes to the AiDot Home Assistant integration are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/); versions
 match the `version` in `custom_components/aidot/manifest.json`.
 
+## [2.8.1]
+
+### Removed
+- **Removed the `sdes_fast_liveplay` option from the integration settings.** It
+  was on by default with no fallback and could silently drop a camera's live view
+  to a snapshot on delicate SDES sessions. Runtime behavior is unchanged - the
+  library still applies its own default (on, with the built-in per-model
+  correctness exclusions); only the user-facing toggle is gone. Existing entries
+  that set the option keep working; the stored value is simply ignored.
+
+### Changed
+- Normalized non-ASCII typography (em/en dashes, arrows, ellipses, bullets) to
+  plain ASCII across comments, docstrings, display strings and docs. No
+  behavioral change.
+
 ## [2.8.0]
 
 ### Fixed
