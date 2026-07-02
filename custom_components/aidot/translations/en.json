@@ -42,7 +42,6 @@
           "connection_mode": "Connection mode",
           "sdes_audio": "SDES camera audio (on by default)",
           "sdes_audio_gain_db": "Camera audio gain (dB)",
-          "sdes_fast_liveplay": "SDES fast connect (faster signaling, on by default)",
           "sdes_adaptive": "SDES adaptive fast-with-fallback (experimental, off by default)",
           "mains_idle_s": "Mains camera warm-hold (seconds)",
           "enable_local_control": "Local camera control"
@@ -52,7 +51,6 @@
           "connection_mode": "How cameras connect. Relay (recommended) keeps the cloud relay available and lets the connection pick the best path - this is what the official app does, so it works on every network: same-LAN, a separate camera VLAN, or remote/strict-NAT. LAN-direct skips the relay for a faster (~1s vs ~3-4s) start, but a camera that is NOT on the same network as Home Assistant will fail to connect - choose it only if all cameras share the HA LAN and you want the quicker start.",
           "sdes_audio": "Include audio in SDES (battery) camera streams, matching the official app. On by default: the stream feeds the audio encoder a continuous silence base so audio from battery cameras plays smoothly. Turn off only if you don't want camera audio.",
           "sdes_audio_gain_db": "Volume trim for camera audio. The camera microphone runs hot, so the default (-8 dB) tames it. Raise toward 0 (or positive) if audio is too quiet; lower if it clips. Applies to SDES (battery) cameras.",
-          "sdes_fast_liveplay": "Matches the official app: skip the livePlayResp wait and go straight to the video handshake, so SDES (battery) cameras start ~4.5 s sooner. ON by default. The PTZ camera is automatically excluded (its handshake needs the slower path). If you ever see a live view drop to a snapshot on a specific camera, turn this off.",
           "sdes_adaptive": "Tries the fast SDES connect first and automatically falls back to the reliable relay path if it doesn't deliver video, so a fast connect is safe even for cameras that aren't on the local network. A camera that fails the fast path is remembered and skips it on later views. Off by default while its real-world reliability is measured: a fast failure adds a delay (~40s) before the fallback, so leave it off unless you want to help test it.",
           "mains_idle_s": "How long to keep a mains-powered camera's live session warm after the last viewer, so re-opening it is instant instead of paying the full cold-start handshake. Default 300s (5 min). Set 0 to never release (always warm). Each warm camera uses a stream slot and keeps decrypting, so keep the total within the concurrent-stream cap (default 3). Battery cameras ignore this (they warm on motion to save battery).",
           "enable_local_control": "Route camera settings (LED, motion detection, night vision, sensitivity, volume, PTZ tracking) over the LAN instead of the cloud, for eligible mains-powered cameras. Faster and works during cloud outages; falls back to cloud automatically. Does not affect video. Battery cameras are skipped."

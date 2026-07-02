@@ -32,12 +32,10 @@ from .const import (
     CONF_SDES_ADAPTIVE,
     CONF_SDES_AUDIO,
     CONF_SDES_AUDIO_GAIN_DB,
-    CONF_SDES_FAST_LIVEPLAY,
     DEFAULT_MAINS_IDLE_S,
     DEFAULT_SDES_ADAPTIVE,
     DEFAULT_SDES_AUDIO,
     DEFAULT_SDES_AUDIO_GAIN_DB,
-    DEFAULT_SDES_FAST_LIVEPLAY,
     DEFAULT_SERVE_PORT_BASE,
     DOMAIN,
     resolve_connection_mode,
@@ -338,7 +336,6 @@ class AidotCamera(CoordinatorEntity[AidotCameraUpdateCoordinator], Camera):
             "sdes_skip_turn": lan_direct,
             "sdes_audio": _audio,
             "sdes_audio_gain_db": float(opts.get(CONF_SDES_AUDIO_GAIN_DB, DEFAULT_SDES_AUDIO_GAIN_DB)),
-            "sdes_fast_liveplay": bool(opts.get(CONF_SDES_FAST_LIVEPLAY, DEFAULT_SDES_FAST_LIVEPLAY)),
             "sdes_adaptive": bool(opts.get(CONF_SDES_ADAPTIVE, DEFAULT_SDES_ADAPTIVE)),
         }
 
