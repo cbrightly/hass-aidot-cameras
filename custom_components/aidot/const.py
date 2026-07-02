@@ -45,6 +45,14 @@ DEFAULT_SDES_AUDIO = True
 CONF_SDES_AUDIO_GAIN_DB = "sdes_audio_gain_db"
 DEFAULT_SDES_AUDIO_GAIN_DB = -8
 
+# EXPERIMENTAL (off by default): skip only the ~2s livePlayResp wait for SDES
+# cameras on connect, keeping the full ICE/TURN/SCTP handshake.  May shave ~2s
+# off the SDES cold start but is UNVALIDATED and could destabilise SDES sessions
+# (the SCTP handshake is delicate); enable only to soak-test, and watch for the
+# live view dropping to a snapshot. See python-aidot-cameras AIDOT_SDES_FAST_LIVEPLAY.
+CONF_SDES_FAST_LIVEPLAY = "sdes_fast_liveplay"
+DEFAULT_SDES_FAST_LIVEPLAY = True
+
 # Adaptive fast-with-fallback for SDES: try the fast path first (skip livePlay
 # waits + TURN relay pre-alloc) and fall back to the full relay path if a fast
 # attempt delivers no media; a per-device cache skips the fast attempt on later

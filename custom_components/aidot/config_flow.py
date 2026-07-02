@@ -28,12 +28,14 @@ from .const import (
     CONF_SDES_ADAPTIVE,
     CONF_SDES_AUDIO,
     CONF_SDES_AUDIO_GAIN_DB,
+    CONF_SDES_FAST_LIVEPLAY,
     CONF_SERVE_PORT_BASE,
     DEFAULT_ENABLE_LOCAL_CONTROL,
     DEFAULT_MAINS_IDLE_S,
     DEFAULT_SDES_ADAPTIVE,
     DEFAULT_SDES_AUDIO,
     DEFAULT_SDES_AUDIO_GAIN_DB,
+    DEFAULT_SDES_FAST_LIVEPLAY,
     DEFAULT_SERVE_PORT_BASE,
     DOMAIN,
     resolve_connection_mode,
@@ -268,6 +270,9 @@ class AidotOptionsFlow(OptionsFlow):
         current_mains_idle = self.config_entry.options.get(
             CONF_MAINS_IDLE_S, DEFAULT_MAINS_IDLE_S
         )
+        current_sdes_fast_liveplay = self.config_entry.options.get(
+            CONF_SDES_FAST_LIVEPLAY, DEFAULT_SDES_FAST_LIVEPLAY
+        )
         current_sdes_adaptive = self.config_entry.options.get(
             CONF_SDES_ADAPTIVE, DEFAULT_SDES_ADAPTIVE
         )
@@ -295,6 +300,10 @@ class AidotOptionsFlow(OptionsFlow):
                     vol.Optional(
                         CONF_SDES_AUDIO_GAIN_DB, default=current_sdes_audio_gain
                     ): vol.All(vol.Coerce(float), vol.Range(min=-30, max=30)),
+                    # EXPERIMENTAL: skip the ~2s livePlayResp wait for SDES cameras.
+                    vol.Optional(
+                        CONF_SDES_FAST_LIVEPLAY, default=current_sdes_fast_liveplay
+                    ): bool,
                     # Adaptive fast-with-fallback for SDES (opt-in): fast-first,
                     # fall back to the full relay path on no media.
                     vol.Optional(
