@@ -182,7 +182,7 @@ class AidotCameraUpdateCoordinator(AidotDeviceUpdateCoordinator):
 
     async def _async_update_data(self) -> DeviceStatusData:
         # Refresh sensors + control-entity states from the cloud device payload
-        # (battery, SD-card, occupancy, motion/night-vision, …).  This is the
+        # (battery, SD-card, occupancy, motion/night-vision, ...).  This is the
         # reliable source the official app reads; cameras don't push these over
         # MQTT, so we no longer spin up a per-camera MQTT attribute poll.
         try:
@@ -273,7 +273,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
 
         # Refresh camera sensors / control-entity states from the just-fetched
         # cloud "properties" (battery, SD-card, occupancy, motion, night-vision,
-        # …) - the reliable source the app reads; cameras don't push these over
+        # ...) - the reliable source the app reads; cameras don't push these over
         # MQTT.  Also seeds the short-TTL cache the per-camera polls reuse.
         # Seed the short-TTL cache under the same lock that guards it in
         # async_get_camera_device, so a concurrent per-camera fetch can't

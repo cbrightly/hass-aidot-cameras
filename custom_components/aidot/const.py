@@ -76,7 +76,7 @@ CONF_MAINS_IDLE_S = "mains_idle_s"
 DEFAULT_MAINS_IDLE_S = 300
 
 # Opt-in local control: route camera attribute writes (LED, motion detection,
-# night vision, sensitivity, volume, PTZ tracking …) over the LAN instead of the
+# night vision, sensitivity, volume, PTZ tracking ...) over the LAN instead of the
 # cloud, for eligible mains-powered cameras. Local-first with automatic cloud
 # fallback; video is unaffected. Opt-in (off by default). Battery cameras
 # are excluded automatically (they don't answer unicast discovery).
