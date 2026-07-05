@@ -23,7 +23,7 @@
   ],
   "quality_scale": "bronze",
   "requirements": [
-    "python-aidot-cameras[webrtc]>=0.10.0"
+    "python-aidot-cameras[webrtc]>=0.10.3"
   ],
-  "version": "2.8.1"
+  "version": "2.8.2"
 }

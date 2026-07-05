@@ -4,6 +4,16 @@ All notable changes to the AiDot Home Assistant integration are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/); versions
 match the `version` in `custom_components/aidot/manifest.json`.
 
+## [2.8.2]
+
+### Fixed
+- **Installs again on Home Assistant 2026.7.** HA 2026.7 pins PyAV to `av==17`,
+  which made `python-aidot-cameras[webrtc]` unsatisfiable (stock aiortc capped
+  `av<17`) - HA reported *"Requirements for aidot not found"* and the integration
+  failed to load. Raises the library floor to **`>=0.10.3`**, which vendors aiortc
+  with the PyAV ceiling widened so it installs under av 17. No integration code
+  change; update and restart HA.
+
 ## [2.8.1]
 
 ### Removed

@@ -116,6 +116,10 @@ The **[Wiki](https://github.com/cbrightly/hass-aidot-cameras/wiki)** is the full
 A few of the most common; the full list is in the
 **[Troubleshooting](https://github.com/cbrightly/hass-aidot-cameras/wiki/Troubleshooting)** wiki:
 
+- **Home Assistant 2026.7: "Requirements for aidot not found"** - **fixed** in
+  `python-aidot-cameras` 0.10.3 (this integration requires it). Update AiDot in
+  HACS and restart Home Assistant; no HA downgrade needed.
+  [Details](https://github.com/cbrightly/hass-aidot-cameras/wiki/Troubleshooting#setup-fails-on-home-assistant-20267-requirements-for-aidot-not-found).
 - **Stream is slow / buffers like HLS** - use a WebRTC card (above) and confirm
   **go2rtc is running** (Settings -> Add-ons -> go2rtc). Without go2rtc, all views
   fall back to HLS.
