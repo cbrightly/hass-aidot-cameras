@@ -1,0 +1,29 @@
+{
+  "domain": "aidot",
+  "name": "AiDot",
+  "after_dependencies": [
+    "ffmpeg",
+    "go2rtc"
+  ],
+  "codeowners": [
+    "@cbrightly"
+  ],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "aidot"
+    }
+  ],
+  "documentation": "https://github.com/cbrightly/hass-aidot-cameras",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/cbrightly/hass-aidot-cameras/issues",
+  "loggers": [
+    "aidot"
+  ],
+  "quality_scale": "platinum",
+  "requirements": [
+    "python-aidot-cameras[webrtc]>=0.11.8"
+  ],
+  "version": "2.8.8"
+}
