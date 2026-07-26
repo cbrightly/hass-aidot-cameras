@@ -1,0 +1,15 @@
+{
+  "pythonVersion": "3.12",
+  "venvPath": ".",
+  "venv": ".venvtest",
+  "include": ["custom_components/aidot"],
+  "typeCheckingMode": "strict",
+  "reportMissingModuleSource": false,
+  "reportUnknownMemberType": "none",
+  "reportUnknownLambdaType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownParameterType": "none",
+  "reportIncompatibleVariableOverride": "none",
+  "reportUnnecessaryComparison": "none"
+}
