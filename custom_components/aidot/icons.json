@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "number": {
+      "motion_sensitivity": {"default": "mdi:motion-sensor"},
+      "speaker_volume": {"default": "mdi:volume-high"}
+    },
+    "switch": {
+      "motion_detection": {"default": "mdi:motion-sensor"},
+      "status_led": {"default": "mdi:led-on"},
+      "microphone": {"default": "mdi:microphone"},
+      "floodlight": {"default": "mdi:light-flood-down"},
+      "ptz_tracking": {"default": "mdi:radar"},
+      "ir_light": {"default": "mdi:led-off"},
+      "siren": {"default": "mdi:alarm-light"}
+    },
+    "select": {
+      "night_vision": {"default": "mdi:weather-night"},
+      "resolution": {"default": "mdi:high-definition"}
+    },
+    "sensor": {
+      "sd_card_status": {"default": "mdi:micro-sd"}
+    },
+    "button": {
+      "ptz_up": {"default": "mdi:arrow-up-circle-outline"},
+      "ptz_down": {"default": "mdi:arrow-down-circle-outline"},
+      "ptz_left": {"default": "mdi:arrow-left-circle-outline"},
+      "ptz_right": {"default": "mdi:arrow-right-circle-outline"},
+      "ptz_stop": {"default": "mdi:stop-circle-outline"},
+      "ptz_zoom_in": {"default": "mdi:magnify-plus-outline"},
+      "ptz_zoom_out": {"default": "mdi:magnify-minus-outline"}
+    }
+  }
+}
