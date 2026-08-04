@@ -1,0 +1,123 @@
+name: CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly - catch HACS/brands drift on the default branch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs inside an Alpine (musl) container - the same runtime Home Assistant
+  # OS / Container uses - so checks run exactly where the integration lives.
+  # Alpine container jobs REQUIRE node24-runtime actions (checkout@v5+): GitHub's
+  # node20 binary is glibc-only and cannot execute inside a musl container.
+  validate:
+    name: Validate (Alpine / musl - HA runtime)
+    runs-on: ubuntu-latest
+    container: python:3.13-alpine
+    steps:
+      - uses: actions/checkout@v5        # node24 (mandatory in a musl container)
+      - run: apk add --no-cache git
+      - run: pip install flake8
+      # Fail only on genuine breakage: syntax errors + undefined names.
+      - name: Lint for real errors
+        run: flake8 custom_components --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Validate JSON (manifest, strings, translations)
+        run: |
+          python - <<'PY'
+          import json, glob
+          for f in sorted(set(
+              glob.glob("custom_components/aidot/*.json")
+              + glob.glob("custom_components/aidot/translations/*.json")
+          )):
+              json.load(open(f))
+              print("ok", f)
+          m = json.load(open("custom_components/aidot/manifest.json"))
+          for k in ("domain", "name", "codeowners", "requirements", "version"):
+              assert k in m, f"manifest missing required key: {k}"
+          print("manifest required keys present")
+          PY
+
+  tests:
+    name: Tests (Python 3.13 / HA 2026.2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test dependencies
+        # The library requirement is read from the manifest so a floor bump is a
+        # one-file change, and the install retries because a fresh library
+        # release can lag PyPI index propagation by a minute or two - a floor
+        # bump raced against its own release failed this job three times on
+        # 2026-07-05.
+        run: |
+          REQ=$(python -c "import json; print(json.load(open('custom_components/aidot/manifest.json'))['requirements'][0])")
+          echo "library requirement from manifest: $REQ"
+          for i in 1 2 3 4 5; do
+            pip install -r requirements_test.txt "$REQ" && exit 0
+            echo "install attempt $i failed - retrying in 45s"
+            sleep 45
+          done
+          echo "install failed after 5 attempts" >&2
+          exit 1
+      - name: Run tests
+        run: pytest tests/ -v --timeout=30
+
+  # HACS structural validation (hacs.json, manifest, brands, repo layout) so a
+  # broken custom-repo install is caught in CI, not by users.
+  #
+  # IMPORTANT - core-integration override: this integration deliberately claims
+  # the `aidot` domain, REPLACING Home Assistant's built-in core AiDot
+  # integration (which is lights-only) with full camera + light support. That
+  # override is intentional and is exactly why this ships as a HACS *custom*
+  # repository and is NOT eligible for the HACS default store - core already owns
+  # `aidot` there. The validation below checks the repo is a well-formed custom
+  # integration; it is not a bid for default-store inclusion.
+  hacs:
+    name: HACS validation (custom repo)
+    # hacs/action fetches repo file content over the GitHub API to validate
+    # hacs.json and the integration manifest. That fetch does NOT work against
+    # this PRIVATE dev repo - a valid hacs.json still reports "invalid" and the
+    # manifest reads as "Got None" - and `integration_manifest` is not an
+    # ignorable check, so the job can only pass where the repo is PUBLIC. This
+    # exact workflow is published (unchanged) to the public distribution repo, so
+    # the job is gated to run THERE (on main / weekly), where the checks are both
+    # meaningful and green. On the private dev repo it skips; hassfest below is
+    # the manifest gate that runs everywhere.
+    if: >-
+      github.repository == 'cbrightly/hass-aidot-cameras' &&
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: HACS Action
+        uses: hacs/action@main
+        with:
+          category: integration
+          # `brands` is skipped because of the core override: the `aidot` brand
+          # in home-assistant/brands belongs to core's built-in integration, so
+          # this custom repo can neither own nor duplicate it. Every other check
+          # (hacs.json, integration_manifest, wheels, repo metadata) stays on.
+          ignore: brands
+
+  # Home Assistant's own manifest/translation validator. Keeps the manifest honest
+  # (required keys, dependency/version formats) against the current HA schema.
+  hassfest:
+    name: Hassfest (HA manifest schema)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: home-assistant/actions/hassfest@master
