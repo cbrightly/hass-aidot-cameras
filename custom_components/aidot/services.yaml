@@ -1,0 +1,52 @@
+# Service names, descriptions and field labels live in strings.json under the
+# top-level "services" key (translatable); this file describes structure only.
+talk:
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    media:
+      required: true
+      example: "media-source://media_source/local/doorbell.mp3"
+      selector:
+        text:
+    max_seconds:
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+
+ptz:
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    direction:
+      required: true
+      example: "left"
+      selector:
+        select:
+          options:
+            - up
+            - down
+            - left
+            - right
+            - left_up
+            - left_down
+            - right_up
+            - right_down
+            - zoom_in
+            - zoom_out
+            - stop
+    speed:
+      required: false
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 8

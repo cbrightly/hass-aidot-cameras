@@ -1,0 +1,93 @@
+name: CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  AIDOT_LIB: "python-aidot-cameras[webrtc]>=0.10.0"
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast smoke inside an Alpine (musl) container - the same runtime Home
+  # Assistant OS / Container uses - so a genuine syntax/undefined-name break is
+  # caught exactly where the integration runs. Alpine container jobs REQUIRE
+  # node24-runtime actions (checkout@v5+): GitHub's node20 binary is glibc-only.
+  smoke:
+    name: Smoke (Alpine / musl - HA runtime)
+    runs-on: ubuntu-latest
+    container: python:3.13-alpine
+    steps:
+      - uses: actions/checkout@v5        # node24 (mandatory in a musl container)
+      - run: apk add --no-cache git
+      - run: pip install flake8
+      - name: Lint for real errors (syntax + undefined names)
+        run: flake8 custom_components --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  lint:
+    name: Ruff + Pyright (strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Ruff
+        run: |
+          pip install ruff
+          ruff check custom_components tests
+      - name: Build typing venv (.venvtest)
+        # pyrightconfig.json points at ./.venvtest; install Home Assistant + the
+        # library there so strict type-checking resolves real types. Uses the
+        # same versions as the tests job (requirements_test.txt pins HA via
+        # pytest-homeassistant-custom-component) so results stay consistent.
+        run: |
+          python -m venv .venvtest
+          .venvtest/bin/pip install --upgrade pip
+          .venvtest/bin/pip install -r requirements_test.txt "$AIDOT_LIB"
+      - name: Pyright (strict - enforces the strict-typing quality rule)
+        run: |
+          pip install pyright
+          pyright
+
+  hassfest:
+    name: Hassfest (manifest / services / translations)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # This is a custom (HACS) integration, not in the home-assistant/brands
+          # repo, so the brands check is not applicable here.
+          ignore: brands
+
+  tests:
+    name: Tests (Python 3.13)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test dependencies
+        # Pin the library to the same floor the integration ships (manifest.json)
+        # so tests exercise exactly what users get, not an older API.
+        run: pip install -r requirements_test.txt "$AIDOT_LIB"
+      - name: Run tests
+        run: >-
+          pytest tests/ -v --timeout=30
+          --cov=custom_components/aidot --cov-report=term-missing
+          --cov-fail-under=100
