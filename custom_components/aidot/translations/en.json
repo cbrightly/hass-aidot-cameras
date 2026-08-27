@@ -1,0 +1,258 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your AiDot account credentials.",
+        "data": {
+          "country_code": "Country",
+          "username": "Email address",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-enter your password for {username}.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "description": "Update credentials for {username}.",
+        "data": {
+          "country_code": "Country",
+          "username": "Email address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email address or password.",
+      "cannot_connect": "Unable to connect to AiDot servers."
+    },
+    "abort": {
+      "already_configured": "Account already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AiDot options",
+        "menu_options": {
+          "streaming": "Streaming and connection",
+          "notifications": "Motion notifications - targets and wording",
+          "camera_notifications": "Motion notifications - per camera"
+        }
+      },
+      "streaming": {
+        "title": "AiDot options",
+        "data": {
+          "serve_port_base": "Camera stream port base",
+          "connection_mode": "Connection mode",
+          "sdes_audio": "SDES camera audio (on by default)",
+          "sdes_audio_gain_db": "Camera audio gain (dB)",
+          "sdes_fast_liveplay": "SDES fast connect (faster signaling, on by default)",
+          "mains_idle_s": "Mains camera warm-hold (seconds)",
+          "enable_local_control": "Local camera control",
+          "startup_prewarm": "Warm camera sessions at startup",
+          "sdes_pin_h264": "Pin camera video to H.264"
+        },
+        "data_description": {
+          "serve_port_base": "Base local port for serving SDES camera streams to HA/go2rtc (each camera uses base..base+399). Change only if it conflicts with another service.",
+          "connection_mode": "How cameras connect. Automatic (recommended) offers every path and prefers the LAN, keeping the cloud relay as a fallback - cameras on the same LAN connect directly, and only a camera with no direct route rides the relay. LAN only skips the relay for a faster (~1s vs ~3-4s) start, but a camera that cannot reach Home Assistant directly will not connect (battery cameras keep the relay regardless - it is their only path back from a cloud wake). Each camera reports the path in use under Diagnostics as media_path.",
+          "sdes_audio": "Include audio in SDES (battery) camera streams, matching the official app. On by default: the stream feeds the audio encoder a continuous silence base so audio from battery cameras plays smoothly. Turn off only if you don't want camera audio.",
+          "sdes_audio_gain_db": "Volume trim for camera audio. The camera microphone runs hot, so the default (-8 dB) tames it. Raise toward 0 (or positive) if audio is too quiet; lower if it clips. Applies to SDES (battery) cameras.",
+          "sdes_fast_liveplay": "Matches the official app: skip the livePlayResp wait and go straight to the video handshake, so SDES (battery) cameras start ~4.5 s sooner. ON by default. The PTZ camera is automatically excluded (its handshake needs the slower path). If you ever see a live view drop to a snapshot on a specific camera, turn this off.",
+          "mains_idle_s": "How long to keep a mains-powered camera's live session warm after the last viewer, so re-opening it is instant instead of paying the full cold-start handshake. Default 0 = never release (always warm, instant views). Set a positive window (e.g. 300 = 5 min) to let unwatched cameras go dormant; a dormant camera reconnects on view in roughly 15-22s. Each warm camera keeps decrypting, which costs host CPU. Battery cameras ignore this (they warm on motion to save battery).",
+          "enable_local_control": "Route camera settings (LED, motion detection, night vision, sensitivity, volume, PTZ tracking) over the LAN instead of the cloud, for eligible mains-powered cameras. Faster and works during cloud outages; falls back to cloud automatically. Does not affect video. Battery cameras are skipped.",
+          "startup_prewarm": "Open a session on every mains camera in the background at startup (staggered), so the first live view after a restart is instant instead of paying the 15-20s cold start. On by default; turn off to save host CPU when views are rare. Battery cameras are excluded.",
+          "sdes_pin_h264": "Stops a camera from switching itself to H.265 mid-session. Some cameras ignore the requested codec and answer with H.265 at a much larger frame size; players that use Media Source Extensions (the Home Assistant iOS app among them) may then show only about one frame per keyframe. Turn this on if live view is very choppy on one camera but fine on others. Off by default: a camera that can only encode H.265 would have nothing to send."
+        }
+      },
+      "notifications": {
+        "title": "Motion notifications",
+        "data": {
+          "targets": "Default notification targets",
+          "cooldown_s": "Cooldown per camera (seconds)",
+          "title": "Notification title",
+          "message": "Notification message"
+        },
+        "data_description": {
+          "targets": "The notify services to send to (for example a phone running the companion app). Used by every camera that does not set its own targets. You can type a service name that is not listed.",
+          "cooldown_s": "After a notification for a camera, further motion from that camera is not sent for this long. A person detection still gets through a cooldown that plain motion started. 0 disables the cooldown.",
+          "title": "Placeholders: camera, event (motion/person), event_title (Motion/Person), time, device_id. Write each one inside curly braces in the title or message.",
+          "message": "Same placeholders as the title."
+        }
+      },
+      "camera_notifications": {
+        "title": "Motion notifications - choose a camera",
+        "data": { "camera": "Camera" }
+      },
+      "camera_notify": {
+        "title": "Motion notifications - {camera}",
+        "data": {
+          "events": "Send a notification for",
+          "targets": "Targets for this camera"
+        },
+        "data_description": {
+          "events": "Off: never. All: every motion and person event. Person only: only when the camera reports a person.",
+          "targets": "Leave empty to use the default targets."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "No cameras are loaded yet. Try again once the integration has finished starting."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Automatic - LAN preferred, relay fallback (recommended)",
+        "lan_direct": "LAN only (fastest, same-network only)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Off",
+        "all": "All motion and person events",
+        "person": "Person only"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "No audio could be decoded from {media} - check the media URL or path."
+    },
+    "talk_session_failed": {
+      "message": "Could not establish a talk session (camera must be streaming - open the live view first)."
+    },
+    "ptz_failed": {
+      "message": "PTZ command {direction} was not sent (camera must be streaming - open the live view first)."
+    },
+    "command_failed": {
+      "message": "AiDot {action} failed: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} was rejected by the device."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "speaker_volume": {
+        "name": "Speaker volume"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "status_led": {
+        "name": "Status LED"
+      },
+      "microphone": {
+        "name": "Microphone (audio privacy)"
+      },
+      "ptz_tracking": {
+        "name": "Auto-tracking"
+      },
+      "camera_audio": {
+        "name": "Camera audio (in HA stream)"
+      },
+      "osd_timestamp": {
+        "name": "Timestamp overlay"
+      },
+      "hdr": {
+        "name": "HDR"
+      },
+      "auto_light": {
+        "name": "Floodlight automation"
+      },
+      "voice_prompts": {
+        "name": "Voice prompts"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Night vision",
+        "state": {
+          "auto": "Auto",
+          "on": "On",
+          "off": "Off"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion",
+              "person": "Person"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "sd_card_status": {
+        "name": "SD card",
+        "state": {
+          "present": "Card in slot",
+          "empty": "Slot empty"
+        }
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Occupancy"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Move up"
+      },
+      "ptz_down": {
+        "name": "Move down"
+      },
+      "ptz_left": {
+        "name": "Move left"
+      },
+      "ptz_right": {
+        "name": "Move right"
+      },
+      "ptz_stop": {
+        "name": "Stop"
+      },
+      "ptz_zoom_in": {
+        "name": "Zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "Zoom out"
+      },
+      "reload": {
+        "name": "Reload"
+      },
+      "refresh_sd_recordings": {
+        "name": "Refresh on-device recordings"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Floodlight"
+      }
+    }
+  }
+}
