@@ -1,0 +1,229 @@
+"""Constants for the aidot integration."""
+
+from collections.abc import Mapping
+from typing import Any
+
+DOMAIN = "aidot"
+
+# Options
+CONF_SERVE_PORT_BASE = "serve_port_base"
+DEFAULT_SERVE_PORT_BASE = 18600
+
+# Connection mode: how a camera's WebRTC path is chosen.
+#   - relay (default): app-parity. Keep the cloud TURN relay in the ICE config
+#     (with credentials) and let ICE pick the best path - host/srflx on the LAN,
+#     relay when the camera is remote / on another VLAN / behind strict NAT.
+#     Works on every topology (this is exactly what the official app does:
+#     iceTransportPolicy=all + credentialed TURN). Costs ~2-3s of relay
+#     pre-allocation on cold start because the gather is not yet trickled.
+#   - lan_direct: skip the relay pre-alloc (the old "fast connect") - connects in
+#     ~1s on the LAN, but a camera NOT on the Home Assistant network cannot
+#     connect at all (no relay fallback). Use only if every camera shares the HA
+#     LAN and you want the faster start.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_RELAY = "relay"
+CONNECTION_MODE_LAN_DIRECT = "lan_direct"
+# There is deliberately NO relay-only mode here. It was built and measured
+# 2026-08-24: with only the relay candidate on offer - and even with c=/m=
+# moved to the relay allocation and the WAN permission pre-installed - both
+# camera families still dialed our host address directly, because the
+# firmware learns it from our own ICE probes and replies to wherever packets
+# came from. An option that says "relay only" while sessions run direct is a
+# control that lies. The library keeps the mode as an env-only experimental
+# knob (AIDOT_SDES_CONNECTION_MODE=relay) with the limitation documented.
+CONNECTION_MODES = [CONNECTION_MODE_RELAY, CONNECTION_MODE_LAN_DIRECT]
+DEFAULT_CONNECTION_MODE = CONNECTION_MODE_RELAY
+
+# Legacy boolean (pre-connection_mode). Retained ONLY to migrate existing
+# entries: True -> lan_direct, False -> relay. New installs use CONNECTION_MODE.
+CONF_FAST_CONNECT = "fast_connect"
+DEFAULT_FAST_CONNECT = True
+
+# SDES audio: include audio (PCMA) in the camera stream. ON by default for
+# app-parity (the official app plays camera audio). The library feeds the audio
+# encoder a continuous silence base (anullsrc + amix) so battery-camera audio
+# streams smoothly and any gaps are filled with silence. Turn off only if you
+# don't want camera audio. Requires python-aidot-cameras>=0.7.34.
+CONF_SDES_AUDIO = "sdes_audio"
+DEFAULT_SDES_AUDIO = True
+
+# Gain (dB) applied to the served SDES camera audio. The camera mic runs hot, so
+# the default trims it; raise toward 0 (or positive) if audio is too quiet, lower
+# if it clips. Passed to the library per camera (HA OS can't set env vars).
+CONF_SDES_AUDIO_GAIN_DB = "sdes_audio_gain_db"
+DEFAULT_SDES_AUDIO_GAIN_DB = -8
+
+# EXPERIMENTAL (off by default): skip only the ~2s livePlayResp wait for SDES
+# cameras on connect, keeping the full ICE/TURN/SCTP handshake.  May shave ~2s
+# off the SDES cold start but is UNVALIDATED and could destabilise SDES sessions
+# (the SCTP handshake is delicate); enable only to soak-test, and watch for the
+# live view dropping to a snapshot. See python-aidot-cameras AIDOT_SDES_FAST_LIVEPLAY.
+CONF_SDES_FAST_LIVEPLAY = "sdes_fast_liveplay"
+DEFAULT_SDES_FAST_LIVEPLAY = True
+
+# Warm-hold window (seconds) for MAINS cameras: how long the live WebRTC session
+# is kept after the last viewer so a re-view is instant (app-like) instead of
+# paying the full ~cold handshake.  Default 300 (5 min): the common "glance,
+# step away, glance again" pattern then stays instant, closing most of the gap
+# to the app (which keeps a persistent session).  0 = never release (keep warm
+# forever).  Each warm mains camera holds a concurrent-stream slot + keeps
+# decrypting, so don't exceed the library's concurrent-stream cap (default 3) -
+# only genuinely-viewed cameras hold a slot (preview/thumbnail refreshes do
+# NOT warm a stream, by design, to avoid slot churn on multi-camera dashboards).
+# Battery cameras ignore this (motion-prewarm preserves battery).
+CONF_MAINS_IDLE_S = "mains_idle_s"
+# 0 = never release. Mains cameras cost nothing to keep warm, and a cold wake on
+# these measures 16-22s - long enough that a live view looks broken. Idle-release
+# is kept for BATTERY cameras, which is where dormancy actually saves something.
+# Before this was tuned, idle-release could never fire at all (the check watched a
+# shared port that always had a peer), so every camera streamed 24/7; making it
+# work correctly is what turned a warm fleet into a fleet that was always asleep.
+DEFAULT_MAINS_IDLE_S = 0
+
+# Opt-in local control: route camera attribute writes (LED, motion detection,
+# night vision, sensitivity, volume, PTZ tracking ...) over the LAN instead of the
+# cloud, for eligible mains-powered cameras. Local-first with automatic cloud
+# fallback; video is unaffected. Opt-in (off by default). Battery cameras
+# are excluded automatically (they don't answer unicast discovery).
+# SDES serve mode: PUSH the decrypted stream into HA's go2rtc over RTSP
+# (publish) instead of serving a local HTTP -listen socket that go2rtc PULLs.
+# The pull chain (single-connection ffmpeg -listen behind the port relay) can
+# jam under HA: an eager go2rtc pull dials during the 25-70s SDES cold window,
+# goes stale in ffmpeg's one connection slot, ffmpeg dies on the stale
+# disconnect, the watchdog restarts cold, and the two sides keep missing each
+# other - no viewer ever gets media (observed live 2026-07-06). Push inverts
+# the topology: ffmpeg publishes outbound to go2rtc, which natively fans out
+# to every viewer; no listen slot, no relay, no pull-timing race (validated
+# live: H264+PCMA tracks and frame grabs within seconds on a real A001513).
+# Note: in push mode the library cannot see viewer connections, so the
+# no-viewer idle release does not apply - the session stays warm until
+# stopped. Ideal for powered cameras; leave OFF for battery-only SDES
+# cameras if standby drain matters more than view latency.
+CONF_SDES_PUSH = "sdes_push"
+DEFAULT_SDES_PUSH = True
+
+# Pin the SDES video offer to H.264 (payload type 96).
+#
+# The offer advertises "96 97" (H264 first). Some cameras honour that and some
+# disregard it: an A001064 answered H264 nine times and H265 twice across eleven
+# otherwise identical sessions, and the codec it chose also changed the
+# resolution (H264 -> 1280x720, H265 -> 2560x1440, 11 of 11). A consumer that
+# cannot decode a sudden 2560x1440 H265 stream shows roughly one frame per
+# keyframe -- which is what Media Source Extensions playback looks like on iOS
+# when the flip happens. Pinning the OFFER removes the choice; measured 4 of 4
+# sessions producing h264 1280x720.
+#
+# Default OFF. This is a path every SDES camera shares, and a camera that can
+# only encode H265 would be left with nothing to send, so the switch is opt-in.
+CONF_SDES_PIN_H264 = "sdes_pin_h264"
+DEFAULT_SDES_PIN_H264 = False
+
+CONF_ENABLE_LOCAL_CONTROL = "enable_local_control"
+DEFAULT_ENABLE_LOCAL_CONTROL = False
+
+# Motion push notifications. Everything lives under ONE options key so the
+# dispatcher (notify_dispatch.py) can read it as a unit and the reload-on-options
+# listener can ignore it: a notification edit must never reload the entry, since
+# a reload tears down every camera session.
+#
+#   options["notifications"] = {
+#       "targets":    ["mobile_app_phone"],   # notify.* service names, no prefix
+#       "cooldown_s": 60,                     # 0 = no cooldown
+#       "title":      "{camera}: {event_title}",
+#       "message":    "{event_title} detected at {time}",
+#       "cameras":    {"<dev_id>": {"events": "off"|"all"|"person",
+#                                   "targets": [...]}},   # [] = use global
+#   }
+CONF_NOTIFICATIONS = "notifications"
+CONF_NOTIFY_TARGETS = "targets"
+CONF_NOTIFY_COOLDOWN_S = "cooldown_s"
+CONF_NOTIFY_TITLE = "title"
+CONF_NOTIFY_MESSAGE = "message"
+CONF_NOTIFY_CAMERAS = "cameras"
+CONF_NOTIFY_EVENTS = "events"
+NOTIFY_EVENTS_OFF = "off"
+NOTIFY_EVENTS_ALL = "all"
+NOTIFY_EVENTS_PERSON = "person"
+NOTIFY_EVENT_CHOICES = [NOTIFY_EVENTS_OFF, NOTIFY_EVENTS_ALL, NOTIFY_EVENTS_PERSON]
+DEFAULT_NOTIFY_COOLDOWN_S = 60
+# Placeholders: {camera} {event} {event_title} {time} {device_id}. An unknown
+# placeholder renders as its own name rather than failing the notification.
+DEFAULT_NOTIFY_TITLE = "{camera}: {event_title}"
+DEFAULT_NOTIFY_MESSAGE = "{event_title} detected at {time}"
+
+
+def resolve_connection_mode(options: Mapping[str, Any]) -> str:
+    """Resolve the effective connection mode from a config entry's options.
+
+    Precedence: an explicit CONF_CONNECTION_MODE wins; otherwise a legacy
+    CONF_FAST_CONNECT boolean is migrated (True -> lan_direct, False -> relay);
+    otherwise the default (relay). Lets pre-existing entries keep their
+    behaviour until the user opens the options form (which writes
+    CONF_CONNECTION_MODE)."""
+    mode = options.get(CONF_CONNECTION_MODE)
+    if mode in CONNECTION_MODES:
+        return mode
+    if CONF_FAST_CONNECT in options:
+        return CONNECTION_MODE_LAN_DIRECT if options[CONF_FAST_CONNECT] else CONNECTION_MODE_RELAY
+    return DEFAULT_CONNECTION_MODE
+
+# Warm every mains camera's WebRTC session at startup so the first live view is
+# instant.  ON by default since 2.9.12: mains cameras cost no battery, and a
+# cold first view is the complaint users actually have.  The cost is real
+# though - it opens a session on every mains camera at every restart and
+# reload with no viewer present, each holding a concurrency slot and keeping
+# the camera decrypting - so it is in the options form to turn off.  (This
+# comment said "OFF by default" for eight releases after the default flipped.)
+CONF_STARTUP_PREWARM = "startup_prewarm"
+DEFAULT_STARTUP_PREWARM = True
+
+# Cloud recording browser.
+#
+# The server caps a page at 10 items whatever pageSize asks for - measured
+# 2026-08-11 across seven cameras, and the vendor's own client hard-overwrites
+# the field. Asking for more does not get more; it only hides the truncation.
+CLOUD_PAGE_SIZE = 10
+# How far back the browser offers day folders.
+CLOUD_LOOKBACK_DAYS = 7
+# A busy camera holds hundreds of events a day (1517 in a 30-day window on the
+# reference fleet), and each page is a request. Cap the work per day folder -
+# and say so in the folder title, because a silent cap reads as "this is
+# everything" when it is not.
+MAX_EVENTS_PER_DAY = 200
+
+# How long an on-device listing stays good enough to serve a browse from.
+# Listing costs a WebRTC session (15-21 s DTLS, 25-70 s SDES cold) and wakes the
+# camera, so browsing NEVER refreshes - a piggyback refresh rides a session
+# opened for some other reason once the cache is older than this.
+SD_CACHE_TTL_S = 900
+
+# How long an UNANSWERED listing stays good enough. Much shorter, because
+# silence is not a reading: it is the same "we learned nothing" as having no
+# session at all, and that case leaves the cache untouched so the next session
+# retries. Caching silence for the full TTL made the least informative answer
+# the most durable one - measured 2026-08-13, a camera holding 108 recordings
+# read "the camera did not answer" for eight minutes after a restart caught it
+# mid-something, and answered on the very next attempt.
+#
+# Deliberately not zero. A listing on a camera that never answers costs two AVIO
+# requests and up to 16 s of timeouts, and motion prewarm opens sessions minutes
+# apart, so "always stale" would re-interrogate a genuinely mute camera on every
+# open - exactly what only_if_stale exists to prevent.
+SD_UNANSWERED_TTL_S = 120
+
+# The window an on-device listing asks for, matching CLOUD_LOOKBACK_DAYS so the
+# two halves of a camera's folder cover the same stretch of time.
+SD_LOOKBACK_DAYS = 7
+
+# How long the refresh button waits for the session it asked for before giving
+# up.  Opening a session schedules the handshake and returns immediately - the
+# session itself lands 15-21 s later on DTLS and 25-70 s later on a cold SDES
+# camera - so a listing taken the instant the open call returns is taken with no
+# session at all.  Anything shorter than the slowest cold open is the same as
+# not waiting for the battery cameras, which are never warm to begin with.
+SD_SESSION_WAIT_S = 75.0
+
+# How often that wait re-asks.  Asking with no session costs nothing: the
+# library answers "no session" before it sends anything, so this is a poll and
+# not a request per second.
+SD_SESSION_POLL_S = 1.0
