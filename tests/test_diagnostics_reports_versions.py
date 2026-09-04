@@ -1,0 +1,112 @@
+"""Diagnostics must say which library versions are actually installed.
+
+The public library repo is a GitHub fork of the upstream lights-only
+`python-aidot`, so GitHub permanently displays "N commits behind" on it. That
+banner is meaningless here -- this package does not merge upstream code, it
+depends on upstream as an ordinary pip requirement and extends it -- but it is
+the first thing a user sees, and there was nothing anywhere telling them which
+upstream release their install is actually running.
+
+Nor could a bug report answer it. Diagnostics is the file a reporter attaches
+to an issue and it listed devices only, so "which versions?" cost a round trip
+every time.
+
+The requirement is a range rather than a pin (upstream shipped two incompatible
+shapes of the private API this attaches to and both are live), which makes the
+*resolved* version the only one worth reporting: two users on the same
+integration version can legitimately be running different upstream releases.
+"""
+
+from custom_components.aidot.diagnostics import _package_versions
+
+
+def test_it_reports_the_camera_library_and_its_upstream():
+    v = _package_versions()
+    assert "python-aidot-cameras" in v
+    assert "python-aidot" in v
+
+
+def test_the_versions_are_the_resolved_ones_not_the_requirement():
+    # A range requirement means the manifest cannot answer this - only the
+    # installed distribution can.
+    v = _package_versions()
+    assert v["python-aidot-cameras"] is not None
+    assert not any(c in str(v["python-aidot-cameras"]) for c in "<>=,"), v
+
+
+def test_a_missing_package_reports_none_rather_than_raising():
+    # Diagnostics must never raise: a partially installed environment is
+    # exactly when someone reaches for it.
+    v = _package_versions(("definitely-not-installed-xyzzy",))
+    assert v["definitely-not-installed-xyzzy"] is None
+
+
+class _Coordinator:
+    device_coordinators: dict = {}
+    camera_coordinators: dict = {}
+
+
+class _Entry:
+    runtime_data = _Coordinator()
+
+
+async def test_the_diagnostics_download_carries_the_versions():
+    # The whole point is that the file a user attaches to an issue answers
+    # "which versions?" without a round trip.
+    from custom_components.aidot.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    diag = await async_get_config_entry_diagnostics(None, _Entry())
+    assert "versions" in diag, diag.keys()
+    assert diag["versions"]["python-aidot-cameras"] is not None
+
+
+def test_it_reports_which_upstream_SHAPE_is_installed_not_just_the_version():
+    """The version string is explicitly the wrong axis for this question.
+
+    `aidot_cameras/_upstream.py` exists to detect which of two incompatible
+    upstream shapes is installed, and says why a version cannot answer it:
+    upstream shipped shape A under both 0.3.53 and 0.3.56 with a five-day
+    excursion to shape B in between, so a version comparison encodes the
+    excursion rather than the shape. It computes `UPSTREAM_SHAPE` at import.
+    Reporting the version and not the shape answers the easy half.
+    """
+    v = _package_versions()
+    assert v.get("upstream_shape") in ("typed", "dict"), v
+
+
+def test_diagnostics_reports_the_media_path():
+    """The path a live session's media actually takes - direct or relay.
+
+    This is the receipt for the connection-mode option: the option states a
+    preference, the camera decides where to send from, and without this field
+    the two are indistinguishable without a wire capture. The label carries no
+    address, so it needs no redaction.
+    """
+    from custom_components.aidot.diagnostics import _media_path
+
+    class _Session:
+        def media_stats(self):
+            return {"packets": 9, "media_path": "relay"}
+
+    class _Client:
+        _stream_session = _Session()
+
+    assert _media_path(_Client()) == "relay"
+
+
+def test_media_path_is_none_without_a_session_and_never_raises():
+    from custom_components.aidot.diagnostics import _media_path
+
+    class _NoSession:
+        _stream_session = None
+
+    class _Explodes:
+        class _S:
+            def media_stats(self):
+                raise RuntimeError("mid-teardown")
+        _stream_session = _S()
+
+    assert _media_path(_NoSession()) is None
+    assert _media_path(_Explodes()) is None
