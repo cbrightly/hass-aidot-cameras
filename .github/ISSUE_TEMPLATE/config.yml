@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or idea
+    url: https://github.com/cbrightly/hass-aidot-cameras/discussions
+    about: For anything that is not a bug, discussions are a better fit.
