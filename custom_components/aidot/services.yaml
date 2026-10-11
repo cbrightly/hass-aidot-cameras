@@ -1,0 +1,71 @@
+talk:
+  name: Talk (two-way audio)
+  description: >-
+    Play an audio clip through an Aidot camera's speaker (push-to-talk / announce).
+    A live view is not required: the clip rides the live session when one is
+    open, and otherwise a temporary session is opened for it.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    media:
+      name: Media
+      description: A media-source id or http(s) URL pointing to an audio file.
+      required: true
+      example: "media-source://media_source/local/doorbell.mp3"
+      selector:
+        text:
+    max_seconds:
+      name: Max seconds
+      description: Maximum talk duration (safety cap).
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+
+ptz:
+  name: PTZ move
+  description: >-
+    Pan / tilt / zoom an Aidot PTZ camera. The PTZ buttons follow the direction
+    codes the camera advertises - the reference PTZ model (A001064) advertises
+    pan only (left, right, stop) - and this service also accepts up, down and
+    zoom for a camera that advertises them. The command rides the live session,
+    so the camera must be streaming - open the live view first. Use direction
+    "stop" to halt motion.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    direction:
+      name: Direction
+      description: Movement direction (or zoom / stop).
+      required: true
+      example: "left"
+      selector:
+        select:
+          options:
+            - up
+            - down
+            - left
+            - right
+            - left_up
+            - left_down
+            - right_up
+            - right_down
+            - zoom_in
+            - zoom_out
+            - stop
+    speed:
+      name: Speed
+      description: Movement speed (1 = slow, 8 = fast).
+      required: false
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 8
