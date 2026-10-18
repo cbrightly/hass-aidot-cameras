@@ -1,0 +1,76 @@
+name: Bug report
+description: Something is not working with the AiDot integration
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most camera problems come down to three things: which model, which
+        transport, and which versions. Without them a report usually cannot be
+        acted on at all, so they are asked for first.
+
+        Please do NOT paste a raw log without reading it. Older versions wrote
+        encryption key material to `home-assistant.log`.
+
+  - type: input
+    id: model
+    attributes:
+      label: Camera model
+      description: The model id, e.g. LK.IPC.A000088. Settings > Devices > the camera > device info.
+      placeholder: LK.IPC.A000088
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      description: A000088 is DTLS. A001513 and A001064 are SDES. If unsure, say so.
+      options:
+        - DTLS (A000088)
+        - SDES (A001513, A001064)
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Integration and library versions
+      description: Integration version from HACS, library from Settings > System > Repairs > system information, or the diagnostics download.
+      placeholder: integration 2.13.2, python-aidot-cameras 1.0.0b8
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.8.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: |
+        Enable debug logging for the integration, reproduce, then paste only the
+        `custom_components.aidot` and `aidot_cameras` lines. Redact anything that
+        looks like a key, token or password.
+      render: text
+
+  - type: checkboxes
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      options:
+        - label: I have attached the diagnostics download (device page > three dots > Download diagnostics). It redacts candidate addresses, but read it before posting.
