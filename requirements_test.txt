@@ -1,0 +1,5 @@
+pytest-homeassistant-custom-component
+# Importing homeassistant.components.camera (needed by test_camera.py) pulls in
+# turbojpeg at module load; the native lib is only used lazily on JPEG ops, so
+# the Python package alone satisfies the import in tests.
+PyTurboJPEG
