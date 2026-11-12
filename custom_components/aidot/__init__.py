@@ -1,0 +1,370 @@
+"""The aidot integration."""
+
+import logging
+import os
+from collections.abc import Mapping
+from typing import Any
+
+# Serve ffmpeg directly instead of through the library's serve-relay. The relay
+# exists to keep the public serve port connectable before ffmpeg binds, but its
+# threaded accept loop was observed dead on HA 2026.7 (public port stops
+# accepting, backlog fills) with no recovery while a mains camera holds its
+# session - and a cold wake without it still reaches first HLS parts in ~16 s
+# (validated live). setdefault, so AIDOT_SERVE_RELAY=1 in the environment can
+# re-enable it for testing.
+os.environ.setdefault("AIDOT_SERVE_RELAY", "0")
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import upstream_log
+from .const import (
+    CONF_CAMERA_AUDIO_DEFAULT,
+    CONF_CONNECTION_MODE,
+    CONF_FAST_CONNECT,
+    CONF_MOTION_PREWARM,
+    CONF_NOTIFICATIONS,
+    CONF_PUBLISH_MODE,
+    CONNECTION_MODE_LAN_DIRECT,
+    CONNECTION_MODE_RELAY,
+    CONNECTION_MODES,
+    DOMAIN,
+    PUBLISH_MODES,
+)
+from .coordinator import AidotConfigEntry, AidotDeviceManagerCoordinator
+from .notify_dispatch import AidotMotionNotifier
+
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+]
+
+
+def _remove_withdrawn_entities(hass: HomeAssistant) -> None:
+    """Drop registry rows for entities 2.11.x stopped creating.
+
+    ``switch.*_siren`` / ``switch.*_floodlight`` moved to the ``siren`` and
+    ``light`` platforms; ``select.*_resolution`` was removed in 2.11.9. Only
+    this integration's own rows are touched.
+    """
+    reg = er.async_get(hass)
+    for ent in list(reg.entities.values()):
+        if ent.platform != DOMAIN:
+            continue
+        relocated = ent.domain == "switch" and (
+            ent.unique_id.endswith("_siren") or ent.unique_id.endswith("_floodlight")
+        )
+        withdrawn = ent.domain == "select" and ent.unique_id.endswith("_resolution")
+        if relocated or withdrawn:
+            reg.async_remove(ent.entity_id)
+
+
+# The stream options the options form no longer offers, as they were stored.
+# Their defaults were all True.
+_RETIRED_PUBLISH_KEYS = ("direct_publish", "hls_audio", "hls_direct_ts")
+_RETIRED_SDES_AUDIO = "sdes_audio"
+_RETIRED_SDES_PIN_H264 = "sdes_pin_h264"
+_PUBLISH_MODE_FOR = {triple: mode for mode, triple in PUBLISH_MODES.items()}
+
+
+def _retire_stream_options(options: dict[str, Any]) -> None:
+    """Rewrite the retired stream options into what replaced them, in place.
+
+    - ``direct_publish``, ``hls_audio`` and ``hls_direct_ts`` become one
+      ``publish_mode``. Every effective combination has a mode of its own;
+      in-sync audio without both of the others never ran (the library turns it
+      off), so those combinations map to the mode that ran.
+    - ``sdes_audio`` (the global "SDES camera audio") goes. A stored False
+      becomes ``camera_audio_default``, so a camera whose "Camera audio" switch
+      has never been set starts off, as it did under the global option.
+    - ``sdes_pin_h264`` goes: the pin is always on.
+    """
+    if any(k in options for k in _RETIRED_PUBLISH_KEYS):
+        dp, aac, ts = (bool(options.pop(k, True)) for k in _RETIRED_PUBLISH_KEYS)
+        options.setdefault(
+            CONF_PUBLISH_MODE, _PUBLISH_MODE_FOR[(dp, aac, ts and dp and aac)]
+        )
+    if _RETIRED_SDES_AUDIO in options and not options.pop(_RETIRED_SDES_AUDIO):
+        options.setdefault(CONF_CAMERA_AUDIO_DEFAULT, False)
+    options.pop(_RETIRED_SDES_PIN_H264, None)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
+    """Migrate an entry to the current config entry version.
+
+    1.1 -> 1.2: the ``fast_connect`` boolean becomes ``connection_mode``
+    (true -> lan_direct, false -> relay) unless a mode is already stored, and
+    the entities 2.11.x withdrew are removed from the registry.
+
+    1.2 -> 1.3: the retired stream options become what replaced them
+    (_retire_stream_options).
+    """
+    if entry.version > 1:
+        return False  # a downgrade: this version cannot read it
+    if entry.minor_version < 2:
+        options = dict(entry.options)
+        if CONF_FAST_CONNECT in options:
+            fast = options.pop(CONF_FAST_CONNECT)
+            if options.get(CONF_CONNECTION_MODE) not in CONNECTION_MODES:
+                options[CONF_CONNECTION_MODE] = (
+                    CONNECTION_MODE_LAN_DIRECT if fast else CONNECTION_MODE_RELAY
+                )
+        _remove_withdrawn_entities(hass)
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    if entry.minor_version < 3:
+        options = dict(entry.options)
+        _retire_stream_options(options)
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=3)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
+    """Set up aidot from a config entry."""
+    # Upstream python-aidot 0.3.56 logs routine per-device chatter at WARNING -
+    # and the device's password and AES key with it. Filter by message rather
+    # than muting the logger, so "connect device error" (the only signal that a
+    # light failed to connect) still comes through. Idempotent; see upstream_log.
+    upstream_log.install()
+
+    # Point the library's sprop-parameter-sets cache at PERSISTENT storage
+    # before any camera client exists. Its default lives under the process
+    # home, which in a Home Assistant container is ephemeral - every container
+    # recreation (a core update, an update of this integration) wiped it, and
+    # each camera's first serve after the restart had to win the in-band-SPS
+    # lottery inside ffmpeg's 2 s probe window. On a loss-prone camera that
+    # showed up as minutes of "Could not find codec parameters" churn after
+    # every update. setdefault: an operator's explicit setting wins.
+    if not os.environ.get("AIDOT_SPROP_DIR"):
+        sprop_dir = hass.config.path(".aidot_sprop")
+        await hass.async_add_executor_job(lambda: os.makedirs(sprop_dir, exist_ok=True))
+        os.environ["AIDOT_SPROP_DIR"] = sprop_dir
+
+    # Work out which video decoder this host can actually use, off the event
+    # loop. ffmpeg -decoders reports what the binary was compiled with, not what
+    # runs here - a Raspberry Pi advertises decoders for hardware it does not
+    # have - so each candidate is proven by decoding a sample, which costs a few
+    # seconds on a first run and must not block setup.
+    #
+    # Run on Home Assistant's own executor, as a background task owned by this
+    # entry, rather than on a thread this integration starts itself. An
+    # untracked thread outliving a config entry is a leak, and one outliving a
+    # test is reported as such - which is how this was found.
+    async def _warm_decoders() -> None:
+        try:
+            from aidot_cameras.camera.hwaccel import probe_decoder
+
+            # probe_decoder reads the remembered answer from disk and holds it
+            # in memory itself, so this one call both loads and measures. The
+            # reader used later on the event loop is memory-only by design.
+            await hass.async_add_executor_job(probe_decoder, "h264")
+            # Then the clip encoder, on this same task so the two probes' test
+            # runs do not share the CPU with each other and with the cameras'
+            # cold opens; a clip that comes first starts it itself
+            # (proxy._detect_hw), and one that comes later finds the answer.
+            await start_hw_encoder_probe(hass)
+        except Exception:  # pragma: no cover - never let this affect setup
+            _LOGGER.debug("codec detection unavailable", exc_info=True)
+
+    from .proxy import start_hw_encoder_probe
+
+    entry.async_create_background_task(
+        hass, _warm_decoders(), "aidot-decoder-probe", eager_start=False
+    )
+
+    # add_update_listener fires on ANY entry change - including the library
+    # persisting a refreshed token back into the entry via async_update_entry
+    # (coordinator.token_fresh_cb). Snapshot the options so the listener reloads
+    # ONLY on a real options change and skips those data-only writes: reloading
+    # on every token refresh churned all entities, re-primed the motion poll
+    # (dropping events), and interrupted active streams. Seeded before the
+    # coordinator starts, which is what can trigger a token refresh.
+    hass.data.setdefault(DOMAIN, {})[f"options-{entry.entry_id}"] = dict(entry.options)
+    entry.async_on_unload(entry.add_update_listener(_async_reload_on_options))
+
+    # Load the persistent clip-link signing secret before anything can mint a
+    # signed URL, so links in notifications survive restarts up to their TTL.
+    from .proxy import async_load_url_secret
+
+    await async_load_url_secret(hass)
+
+    # Load the persisted camera serve ports before any camera entity exists,
+    # so each camera's local stream URL keeps the port it had last run.
+    from . import serve_ports
+
+    await serve_ports.async_load(hass)
+
+    coordinator = AidotDeviceManagerCoordinator(hass, entry)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        # The client's constructor already started its LAN discovery loop;
+        # a setup that fails here (ConfigEntryNotReady, auth) is retried with
+        # a fresh client, so this one must not keep broadcasting.
+        try:
+            await coordinator.client.async_cleanup()
+        except Exception:
+            _LOGGER.debug("client cleanup after a failed setup", exc_info=True)
+        raise
+    entry.runtime_data = coordinator
+
+    # Motion push notifications. Started after the first refresh so every camera
+    # coordinator exists; it follows later device-list refreshes on its own.
+    notifier = AidotMotionNotifier(hass, entry)
+    notifier.start()
+    entry.async_on_unload(notifier.detach)
+
+    # Register the AiDot account as a hub device so lights and cameras nest under
+    # it (manifest integration_type=hub); each device links back via via_device.
+    from homeassistant.helpers import device_registry as dr
+
+    _hub = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="AiDot",
+        name="AiDot",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    # Home Assistant 2026.9 links children by the hub's REGISTRY id rather than
+    # by its identifier tuple, and the entities are built before they could look
+    # it up themselves. Stash it here, where it is returned for free.
+    try:
+        entry.runtime_data.hub_device_id = _hub.id
+    except Exception:  # pragma: no cover - runtime_data shape is not ours to assume
+        _LOGGER.debug("could not stash the hub device id", exc_info=True)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    from .proxy import AidotVideoProxyView
+
+    try:
+        hass.http.register_view(AidotVideoProxyView(hass))
+    except Exception as exc:
+        # Expected on a second entry setup (the route exists); anything else
+        # would otherwise leave the clip proxy silently absent.
+        _LOGGER.debug("clip proxy view not registered: %s", exc)
+
+    from .sd_proxy import AidotSdPlaybackView, AidotSdThumbnailView
+
+    try:
+        hass.http.register_view(AidotSdPlaybackView(hass))
+    except Exception as exc:
+        # Same as the clip proxy: a second entry setup finds the route there.
+        _LOGGER.debug("card playback view not registered: %s", exc)
+    try:
+        hass.http.register_view(AidotSdThumbnailView(hass))
+    except Exception as exc:
+        _LOGGER.debug("card thumbnail view not registered: %s", exc)
+
+    # The hidden panel a notification tap can open to play a clip in the app
+    # (the "open in the app" notification option). Never fails setup.
+    try:
+        from .clip_panel import async_register_clip_panel
+
+        await async_register_clip_panel(hass)
+    except Exception:
+        _LOGGER.debug("could not register the clip panel", exc_info=True)
+
+    # HA 2026.6 async_process_integration_platforms does not auto-discover
+    # media_source.py in custom components, so register it explicitly.
+    # hass.data["media_source"] is the dict HA's own platform loader writes to.
+    if "media_source" in hass.config.components:
+        from .media_source import async_get_media_source as _get_media_source
+
+        _ms_key = "media_source"
+        if DOMAIN not in hass.data.get(_ms_key, {}):
+            source = await _get_media_source(hass)
+            hass.data.setdefault(_ms_key, {})[DOMAIN] = source
+
+    return True
+
+
+# Options read live, on every use, so changing one needs no reload: the
+# notifications block (the motion dispatcher reads it per event) and pre-connect
+# on motion (the camera entity reads it per motion event).
+_LIVE_OPTIONS = (CONF_NOTIFICATIONS, CONF_MOTION_PREWARM)
+
+
+def _options_that_reload(options: Mapping[str, Any]) -> dict[str, Any]:
+    """The options that require a reload to take effect (all but _LIVE_OPTIONS)."""
+    stripped = dict(options)
+    for key in _LIVE_OPTIONS:
+        stripped.pop(key, None)
+    return stripped
+
+
+async def _async_reload_on_options(
+    hass: HomeAssistant, entry: AidotConfigEntry
+) -> None:
+    """Reload the entry only when its OPTIONS actually change.
+
+    add_update_listener also fires on bare data writes - the library persists a
+    refreshed token into the entry via async_update_entry
+    (coordinator.token_fresh_cb) - and reloading on those churns every entity,
+    re-primes the motion poll (dropping events), and interrupts active streams.
+    Compare against the snapshot taken in async_setup_entry and return early on a
+    data-only update.
+
+    The options in _LIVE_OPTIONS are excluded from the comparison: each is read
+    live where it is used, so an edit there needs no reload and must not pay
+    for one (a reload drops every camera session).
+    """
+    store = hass.data.setdefault(DOMAIN, {})
+    key = f"options-{entry.entry_id}"
+    current = dict(entry.options)
+    previous = store.get(key) or {}
+    if current == previous:
+        return
+    store[key] = current
+    if _options_that_reload(current) == _options_that_reload(previous):
+        return
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
+    """Unload a config entry."""
+    ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not ok:
+        # A platform refused to unload, so its entities are still live and the
+        # entry stays loaded: tearing down the client and the shared state
+        # under them would leave entities driving a stopped client.
+        return False
+    lights = list(getattr(entry.runtime_data, "device_coordinators", {}) or {})
+    await entry.runtime_data.async_cleanup()
+    from . import lan_issue
+
+    lan_issue.clear_for(hass, lights)
+    hass.data.get(DOMAIN, {}).pop(f"options-{entry.entry_id}", None)
+    if not any(
+        e.entry_id != entry.entry_id and e.state is ConfigEntryState.LOADED
+        for e in hass.config_entries.async_entries(DOMAIN)
+    ):
+        # The last entry: clear the go2rtc shared issue (raised process-wide by
+        # the resolver), then stop the in-sync HLS listener and its mux
+        # threads (they are process-wide; a later setup starts fresh ones).
+        from aidot_cameras.camera import hls_ts
+        from homeassistant.helpers import issue_registry as ir
+
+        from .go2rtc_target import HA_READS_ISSUE, SDES_NO_GO2RTC_ISSUE, invalidate
+
+        ir.async_delete_issue(hass, DOMAIN, HA_READS_ISSUE)
+        ir.async_delete_issue(hass, DOMAIN, SDES_NO_GO2RTC_ISSUE)
+        # Forget the flags and the cached target together: popping only a flag
+        # left a cached target that re-raised it on the next resolve and
+        # stopped the sessions a reload had just opened.
+        hass.data.get(DOMAIN, {}).pop("go2rtc-target-ha-reads", None)
+        hass.data.get(DOMAIN, {}).pop("go2rtc-sdes-no-go2rtc-raised", None)
+        invalidate(hass)
+        await hass.async_add_executor_job(hls_ts.shutdown)
+    return True
