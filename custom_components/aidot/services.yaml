@@ -1,0 +1,149 @@
+talk:
+  name: Talk (two-way audio)
+  description: >-
+    Play an audio clip through an Aidot camera's speaker (push-to-talk / announce).
+    A live view is not required: the clip rides the live session when one is
+    open, and otherwise a temporary session is opened for it.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    media:
+      name: Media
+      description: A media-source id or http(s) URL pointing to an audio file.
+      required: true
+      example: "media-source://media_source/local/doorbell.mp3"
+      selector:
+        text:
+    max_seconds:
+      name: Max seconds
+      description: Maximum talk duration (safety cap).
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+
+ptz:
+  name: PTZ move
+  description: >-
+    Pan / tilt / zoom an Aidot PTZ camera. The PTZ buttons follow the direction
+    codes the camera advertises - the reference PTZ model (A001064) advertises
+    pan only (left, right, stop) - and this service also accepts up, down and
+    zoom for a camera that advertises them. The command rides the live session,
+    so the camera must be streaming - open the live view first. Use direction
+    "stop" to halt motion.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    direction:
+      name: Direction
+      description: Movement direction (or zoom / stop).
+      required: true
+      example: "left"
+      selector:
+        select:
+          options:
+            - up
+            - down
+            - left
+            - right
+            - left_up
+            - left_down
+            - right_up
+            - right_down
+            - zoom_in
+            - zoom_out
+            - stop
+    speed:
+      name: Speed
+      description: Movement speed (1 = slow, 8 = fast).
+      required: false
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 8
+
+stop_sd_playback:
+  name: Stop SD card playback
+  description: >-
+    Stop fetching a recording off an Aidot camera's SD card and free the
+    camera for the live view. The first play of a card recording fetches it
+    first, which holds the camera's single media stream for about the clip's
+    length (two minutes at most); this ends the fetch early. What was fetched
+    so far is played, and the whole recording is fetched again on a play
+    after ten minutes.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+
+wake:
+  name: Wake camera
+  description: >-
+    Wake a battery camera now, ahead of a view or a recording. The same
+    request the AiDot app sends when its live view opens; a battery camera's
+    wake can take 40 seconds or more, which a 60-second camera.record
+    otherwise spends waiting for the first picture. Call it about 45 seconds
+    before the recording. The wake alone lets the camera sleep again about 25
+    seconds later, so keep-alive renewals follow it for "hold" seconds, ending
+    early once a view opens. Refused on a mains camera, which never sleeps.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    hold:
+      name: Hold awake
+      description: Seconds to keep the camera awake after the wake, until a view opens. 0 sends the wake alone.
+      required: false
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
+
+sleep:
+  name: Sleep camera
+  description: >-
+    Send a battery camera back to sleep now, instead of about 25 seconds after
+    its last keep-alive. The request the AiDot app sends when its live view
+    closes. Useful after a scheduled recording. Refused while the camera is
+    streaming or fetching a card recording, and on a mains camera, which never
+    sleeps.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+
+delete_sd_recording:
+  name: Delete SD card recording
+  description: >-
+    Delete one recording off the camera's SD card, as the app's delete does.
+    Name it by the key the media browser uses for it, or by its exact start
+    time. The camera must be streaming (open the live view first). This
+    cannot be undone.
+  target:
+    entity:
+      integration: aidot
+      domain: camera
+  fields:
+    key:
+      name: Recording key
+      description: The recording's key, as in its media-browser identifier.
+      required: false
+      selector:
+        text:
+    started_at:
+      name: Started at
+      description: The recording's start time, to the second.
+      required: false
+      selector:
+        datetime:
