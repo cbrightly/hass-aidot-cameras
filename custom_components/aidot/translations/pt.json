@@ -1,0 +1,494 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Introduza as credenciais da sua conta AiDot.",
+        "data": {
+          "country_code": "Pa\u00eds",
+          "username": "Endere\u00e7o de e-mail",
+          "password": "Palavra-passe"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Introduza novamente a sua palavra-passe para {username}.",
+        "data": {
+          "password": "Palavra-passe"
+        }
+      },
+      "reconfigure": {
+        "description": "Atualize as credenciais de {username}.",
+        "data": {
+          "country_code": "Pa\u00eds",
+          "username": "Endere\u00e7o de e-mail",
+          "password": "Palavra-passe"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Endere\u00e7o de e-mail ou palavra-passe inv\u00e1lidos.",
+      "cannot_connect": "N\u00e3o foi poss\u00edvel ligar aos servidores AiDot."
+    },
+    "abort": {
+      "already_configured": "Conta j\u00e1 configurada.",
+      "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer.",
+      "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida.",
+      "reconfigure_successful": "Reconfigura\u00e7\u00e3o bem sucedida."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Op\u00e7\u00f5es AiDot",
+        "menu_options": {
+          "streaming": "Vista em direto e liga\u00e7\u00e3o",
+          "audio": "\u00c1udio e grava\u00e7\u00f5es",
+          "notifications": "Notifica\u00e7\u00f5es de movimento - destinos e texto",
+          "camera_notifications": "Notifica\u00e7\u00f5es de movimento - por c\u00e2mara"
+        }
+      },
+      "streaming": {
+        "title": "Vista em direto e liga\u00e7\u00e3o",
+        "data": {
+          "serve_port_base": "Porta base dos streams das c\u00e2maras",
+          "connection_mode": "Modo de liga\u00e7\u00e3o",
+          "sdes_fast_liveplay": "Liga\u00e7\u00e3o r\u00e1pida SDES",
+          "mains_idle_s": "Manter quentes as c\u00e2maras ligadas \u00e0 corrente (segundos)",
+          "enable_local_control": "Controlo local da c\u00e2mara",
+          "startup_prewarm": "Pr\u00e9-aquecer as sess\u00f5es das c\u00e2maras no arranque",
+          "motion_prewarm": "Pr\u00e9-ligar ao detetar movimento",
+          "sd_list_on_view": "Listar o cart\u00e3o SD quando uma c\u00e2mara a bateria \u00e9 vista"
+        },
+        "data_description": {
+          "serve_port_base": "Porta local base para o servi\u00e7o local, usado pelas c\u00e2maras padr\u00e3o (DTLS) quando n\u00e3o publicam no go2rtc; cada c\u00e2mara usa base..base+399. Altere apenas se entrar em conflito com outro servi\u00e7o.",
+          "connection_mode": "Como as c\u00e2maras se ligam. Autom\u00e1tico (recomendado) oferece todos os caminhos e prefere a LAN, mantendo o relay da cloud como alternativa - as c\u00e2maras na mesma LAN ligam-se diretamente, e s\u00f3 uma c\u00e2mara sem rota direta passa pelo relay. Apenas LAN dispensa o relay para um arranque mais r\u00e1pido (~1 s contra ~3-4 s), mas uma c\u00e2mara que n\u00e3o consiga alcan\u00e7ar o Home Assistant diretamente n\u00e3o se ligar\u00e1 (as c\u00e2maras a bateria mant\u00eam o relay em qualquer caso - \u00e9 o \u00fanico caminho de volta depois de serem acordadas pela cloud). Cada c\u00e2mara indica o caminho em uso em Diagn\u00f3sticos como media_path.",
+          "sdes_fast_liveplay": "Igual \u00e0 aplica\u00e7\u00e3o oficial: salta a espera por livePlayResp e passa diretamente para o handshake de v\u00eddeo, pelo que as c\u00e2maras SDES (a bateria) arrancam ~4,5 s mais cedo. ATIVADO por omiss\u00e3o. A c\u00e2mara PTZ \u00e9 exclu\u00edda automaticamente (o seu handshake precisa do caminho mais lento). Se alguma vez a vista em direto de uma c\u00e2mara espec\u00edfica cair para uma imagem est\u00e1tica, desative esta op\u00e7\u00e3o.",
+          "mains_idle_s": "Durante quanto tempo se mant\u00e9m quente a sess\u00e3o em direto de uma c\u00e2mara ligada \u00e0 corrente depois do \u00faltimo espectador, para que reabri-la seja instant\u00e2neo em vez de pagar todo o handshake do arranque a frio. Por omiss\u00e3o 0 = nunca libertar (sempre quente, vistas instant\u00e2neas). Defina uma janela positiva (p. ex. 300 = 5 min) para deixar as c\u00e2maras que ningu\u00e9m est\u00e1 a ver ficarem em repouso; uma c\u00e2mara em repouso volta a ligar-se ao ser vista em cerca de 2,4-3,3 s. Cada c\u00e2mara quente continua a desencriptar, o que consome CPU do anfitri\u00e3o. As c\u00e2maras a bateria ignoram esta defini\u00e7\u00e3o: s\u00f3 transmitem enquanto algu\u00e9m as est\u00e1 a ver (atualizar a lista do cart\u00e3o SD de uma c\u00e2mara a bateria tamb\u00e9m a acorda por instantes) e param cerca de meio minuto depois de o \u00faltimo espectador sair (mais os 30 s do pr\u00f3prio Home Assistant para o di\u00e1logo HLS).",
+          "enable_local_control": "Encaminha as defini\u00e7\u00f5es da c\u00e2mara (LED, dete\u00e7\u00e3o de movimento, vis\u00e3o noturna, sensibilidade, volume, seguimento PTZ) pela LAN em vez da cloud, nas c\u00e2maras ligadas \u00e0 corrente eleg\u00edveis. Mais r\u00e1pido e funciona durante falhas da cloud; recorre automaticamente \u00e0 cloud. N\u00e3o afeta o v\u00eddeo. As c\u00e2maras a bateria s\u00e3o ignoradas.",
+          "startup_prewarm": "Abre uma sess\u00e3o em cada c\u00e2mara ligada \u00e0 corrente em segundo plano no arranque (de forma escalonada), para que a primeira vista em direto depois de um rein\u00edcio seja instant\u00e2nea em vez de pagar o arranque a frio (cerca de 2,4-3,3 s numa c\u00e2mara ligada \u00e0 corrente). Ativado por omiss\u00e3o; desative para poupar CPU do anfitri\u00e3o quando as vistas s\u00e3o raras. As c\u00e2maras a bateria s\u00e3o exclu\u00eddas.",
+          "motion_prewarm": "Abre a sess\u00e3o de uma c\u00e2mara ligada \u00e0 corrente quando esta comunica movimento, para que uma vista em direto aberta pouco depois arranque quente em vez de pagar o arranque a frio (cerca de 3 s); a sess\u00e3o fica depois aberta enquanto a defini\u00e7\u00e3o de manter quente a conservar. Desativado por omiss\u00e3o: uma notifica\u00e7\u00e3o de movimento abre o clip da cloud, n\u00e3o uma vista em direto, pelo que a maior parte destas sess\u00f5es n\u00e3o transmite para ningu\u00e9m. Apenas c\u00e2maras ligadas \u00e0 corrente; as c\u00e2maras a bateria nunca s\u00e3o pr\u00e9-ligadas.",
+          "sd_list_on_view": "Apenas para c\u00e2maras a bateria. Enquanto decorre uma vista em direto (ou um camera.record) de uma c\u00e2mara a bateria, a c\u00e2mara \u00e9 tamb\u00e9m questionada sobre o conte\u00fado do seu cart\u00e3o SD, pela sess\u00e3o que essa vista j\u00e1 tem aberta, para que a pasta On device do navegador de multim\u00e9dia se preencha sem premir Atualizar grava\u00e7\u00f5es no dispositivo. Nunca acorda a c\u00e2mara nem abre uma sess\u00e3o pr\u00f3pria, e n\u00e3o mant\u00e9m a c\u00e2mara acordada depois de a vista fechar; uma vista com menos de alguns segundos n\u00e3o obt\u00e9m listagem. No m\u00e1ximo uma listagem por c\u00e2mara a cada 5 minutos, e nenhuma enquanto a lista tiver menos de 15 minutos. Desligado por omiss\u00e3o: a listagem partilha a liga\u00e7\u00e3o Wi-Fi da c\u00e2mara com a imagem em direto. Aplica-se sem recarregar."
+        }
+      },
+      "audio": {
+        "title": "\u00c1udio e grava\u00e7\u00f5es",
+        "data": {
+          "sdes_audio_gain_db": "Ganho de \u00e1udio da c\u00e2mara (dB)",
+          "publish_mode": "Publica\u00e7\u00e3o e \u00e1udio em HLS e grava\u00e7\u00f5es"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Ajuste de volume do \u00e1udio da c\u00e2mara, aplicado depois do normalizador de n\u00edvel que a biblioteca executa em cada c\u00e2mara. 0 dB (o valor por omiss\u00e3o) reproduz uma c\u00e2mara a bateria ou PTZ com o mesmo volume de uma M3 Pro. Aumente se uma c\u00e2mara estiver demasiado baixa, diminua se saturar. Aplica-se \u00e0s c\u00e2maras SDES (a bateria e PTZ). As instala\u00e7\u00f5es que guardaram o antigo valor por omiss\u00e3o de -8 dB mant\u00eam-no; defina 0 para as igualar \u00e0s restantes.",
+          "publish_mode": "Como cada c\u00e2mara chega ao go2rtc e como o di\u00e1logo HLS do Home Assistant (os cart\u00f5es Imagem) e as grava\u00e7\u00f5es de camera.record obt\u00eam o som. As vistas WebRTC transportam o \u00e1udio pr\u00f3prio da c\u00e2mara em todos os modos. A publica\u00e7\u00e3o direta envia o v\u00eddeo e o \u00e1udio de cada c\u00e2mara diretamente para o go2rtc, sem nenhum processo ffmpeg pelo meio: as c\u00e2maras SDES publicam sempre, e as c\u00e2maras padr\u00e3o (DTLS) publicam num go2rtc na porta 1984 (ou AIDOT_GO2RTC_API) quando este responde, mantendo caso contr\u00e1rio a sua porta de servi\u00e7o local. Nada \u00e9 publicado no go2rtc inclu\u00eddo no Home Assistant. Sincronizado (o valor por omiss\u00e3o) faz ainda com que o di\u00e1logo HLS e as grava\u00e7\u00f5es leiam o stream de cada c\u00e2mara ligada \u00e0 corrente diretamente desta integra\u00e7\u00e3o, com som e imagem no mesmo rel\u00f3gio (as c\u00e2maras a bateria continuam a ler o do go2rtc); atrav\u00e9s do go2rtc, uma grava\u00e7\u00e3o que comece quando a c\u00e2mara j\u00e1 est\u00e1 a transmitir pode ter o som at\u00e9 cerca de 0,75 s atrasado em rela\u00e7\u00e3o \u00e0 imagem. A c\u00f3pia AAC do \u00e1udio da c\u00e2mara que d\u00e1 som ao HLS e \u00e0s grava\u00e7\u00f5es custa cerca de 2-3 % de um n\u00facleo de CPU por c\u00e2mara em transmiss\u00e3o; os modos sem \u00e1udio poupam isso. Os modos ffmpeg voltam a um processo ffmpeg por c\u00e2mara padr\u00e3o; as c\u00e2maras SDES continuam a publicar diretamente."
+        }
+      },
+      "notifications": {
+        "title": "Notifica\u00e7\u00f5es de movimento",
+        "data": {
+          "targets": "Destinos de notifica\u00e7\u00e3o por omiss\u00e3o",
+          "cooldown_s": "Tempo de espera por c\u00e2mara (segundos)",
+          "title": "T\u00edtulo da notifica\u00e7\u00e3o",
+          "message": "Mensagem da notifica\u00e7\u00e3o",
+          "open_in_app": "Abrir o clip dentro da aplica\u00e7\u00e3o Home Assistant (experimental)"
+        },
+        "data_description": {
+          "targets": "Os servi\u00e7os de notifica\u00e7\u00e3o para onde enviar (por exemplo, um telem\u00f3vel com a aplica\u00e7\u00e3o complementar). Usados por todas as c\u00e2maras que n\u00e3o definem os seus pr\u00f3prios destinos. Pode escrever um nome de servi\u00e7o que n\u00e3o esteja na lista.",
+          "cooldown_s": "Depois de uma notifica\u00e7\u00e3o de uma c\u00e2mara, n\u00e3o s\u00e3o enviados mais movimentos dessa c\u00e2mara durante este tempo. Uma dete\u00e7\u00e3o de pessoa passa mesmo assim por um tempo de espera iniciado por um simples movimento. 0 desativa o tempo de espera.",
+          "title": "Marcadores: camera, event (motion/person), event_title (Motion/Person), time, device_id. Escreva cada um entre chavetas no t\u00edtulo ou na mensagem.",
+          "message": "Os mesmos marcadores do t\u00edtulo.",
+          "open_in_app": "Quando se toca numa notifica\u00e7\u00e3o, reproduz o clip do evento numa p\u00e1gina dentro da aplica\u00e7\u00e3o Home Assistant. Desativado: o toque abre a liga\u00e7\u00e3o pr\u00f3pria do clip, que a aplica\u00e7\u00e3o para iPhone abre no Safari."
+        }
+      },
+      "camera_notifications": {
+        "title": "Notifica\u00e7\u00f5es de movimento - escolha uma c\u00e2mara",
+        "data": {
+          "camera": "C\u00e2mara"
+        },
+        "data_description": {
+          "camera": "A c\u00e2mara cujas defini\u00e7\u00f5es de notifica\u00e7\u00e3o pretende alterar."
+        }
+      },
+      "camera_notify": {
+        "title": "Notifica\u00e7\u00f5es de movimento - {camera}",
+        "data": {
+          "events": "Enviar uma notifica\u00e7\u00e3o para",
+          "targets": "Destinos para esta c\u00e2mara"
+        },
+        "data_description": {
+          "events": "Desativado: nunca. Todos: todos os eventos de movimento e de pessoa. Apenas pessoa: s\u00f3 quando a c\u00e2mara comunica uma pessoa.",
+          "targets": "Deixe vazio para usar os destinos por omiss\u00e3o."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Ainda n\u00e3o h\u00e1 c\u00e2maras carregadas. Tente novamente quando a integra\u00e7\u00e3o tiver terminado de arrancar."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Autom\u00e1tico - LAN preferida, relay como alternativa (recomendado)",
+        "lan_direct": "Apenas LAN (o mais r\u00e1pido, s\u00f3 na mesma rede)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Desativado",
+        "all": "Todos os eventos de movimento e de pessoa",
+        "person": "Apenas pessoa"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Publica\u00e7\u00e3o direta, \u00e1udio sincronizado para HLS e grava\u00e7\u00f5es (recomendado)",
+        "go2rtc": "Publica\u00e7\u00e3o direta, HLS e grava\u00e7\u00f5es atrav\u00e9s do go2rtc",
+        "no_hls_audio": "Publica\u00e7\u00e3o direta, sem \u00e1udio em HLS e grava\u00e7\u00f5es",
+        "ffmpeg": "ffmpeg por c\u00e2mara padr\u00e3o",
+        "ffmpeg_no_hls_audio": "ffmpeg por c\u00e2mara padr\u00e3o, sem \u00e1udio em HLS e grava\u00e7\u00f5es"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "N\u00e3o foi poss\u00edvel descodificar \u00e1udio de {media} - verifique o URL ou o caminho do ficheiro multim\u00e9dia."
+    },
+    "talk_session_failed": {
+      "message": "N\u00e3o foi poss\u00edvel estabelecer uma sess\u00e3o de conversa: n\u00e3o foi poss\u00edvel alcan\u00e7ar a c\u00e2mara, ou nenhuma sess\u00e3o conseguia transportar a voz. N\u00e3o \u00e9 necess\u00e1ria uma vista em direto."
+    },
+    "ptz_failed": {
+      "message": "O comando PTZ {direction} n\u00e3o foi enviado (a c\u00e2mara tem de estar a transmitir - abra primeiro a vista em direto)."
+    },
+    "sd_playback_not_running": {
+      "message": "N\u00e3o est\u00e1 a ser obtida nenhuma grava\u00e7\u00e3o do cart\u00e3o SD nesta c\u00e2mara."
+    },
+    "command_failed": {
+      "message": "AiDot {action} falhou: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} foi rejeitado pelo dispositivo."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} destina-se a c\u00e2maras a bateria; esta c\u00e2mara est\u00e1 ligada \u00e0 corrente e nunca adormece."
+    },
+    "wake_refused": {
+      "message": "A cloud n\u00e3o aceitou o pedido para acordar (consulte o registo)."
+    },
+    "sleep_refused": {
+      "message": "A cloud n\u00e3o aceitou o pedido para adormecer (consulte o registo)."
+    },
+    "camera_in_use": {
+      "message": "A c\u00e2mara est\u00e1 a transmitir ou a obter uma grava\u00e7\u00e3o do cart\u00e3o; pare isso primeiro, ou deixe a vista terminar."
+    },
+    "sd_recording_not_found": {
+      "message": "Nenhuma grava\u00e7\u00e3o do cart\u00e3o corresponde; indique a chave da grava\u00e7\u00e3o a partir do navegador de multim\u00e9dia ou a sua hora de in\u00edcio exata, e atualize primeiro a lista do cart\u00e3o."
+    },
+    "sd_delete_no_session": {
+      "message": "A c\u00e2mara tem de estar a transmitir para eliminar uma grava\u00e7\u00e3o do cart\u00e3o; abra primeiro a sua vista em direto."
+    },
+    "sd_delete_refused": {
+      "message": "A c\u00e2mara recusou eliminar a grava\u00e7\u00e3o."
+    },
+    "sd_recording_ambiguous": {
+      "message": "Mais de uma grava\u00e7\u00e3o do cart\u00e3o come\u00e7a nesse segundo; indique a que pretende eliminar atrav\u00e9s da sua chave do navegador de multim\u00e9dia."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Sensibilidade ao movimento"
+      },
+      "speaker_volume": {
+        "name": "Volume do altifalante"
+      },
+      "light_brightness": {
+        "name": "Brilho da luz"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "Luz quando aparece algu\u00e9m"
+      },
+      "camera_audio": {
+        "name": "\u00c1udio da c\u00e2mara (no stream do HA)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Microfone (privacidade de \u00e1udio)"
+      },
+      "motion_detection": {
+        "name": "Dete\u00e7\u00e3o de movimento"
+      },
+      "osd_timestamp": {
+        "name": "Marca de \u00e1gua"
+      },
+      "ptz_tracking": {
+        "name": "Seguimento autom\u00e1tico"
+      },
+      "sound_all": {
+        "name": "Toda a dete\u00e7\u00e3o de som"
+      },
+      "sound_baby_cry": {
+        "name": "Dete\u00e7\u00e3o de choro de beb\u00e9"
+      },
+      "sound_dog_bark": {
+        "name": "Dete\u00e7\u00e3o de ladrar de c\u00e3o"
+      },
+      "sound_enable": {
+        "name": "Dete\u00e7\u00e3o de som"
+      },
+      "sound_glass_break": {
+        "name": "Dete\u00e7\u00e3o de quebra de vidro"
+      },
+      "sound_smoke_t3": {
+        "name": "Dete\u00e7\u00e3o de alarme de fumo (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "Dete\u00e7\u00e3o de alarme de fumo (T4)"
+      },
+      "status_led": {
+        "name": "LED de estado"
+      },
+      "voice_prompts": {
+        "name": "Avisos de voz"
+      },
+      "detect_human": {
+        "name": "Dete\u00e7\u00e3o de pessoas"
+      },
+      "detect_vehicle": {
+        "name": "Dete\u00e7\u00e3o de ve\u00edculos"
+      },
+      "detect_package": {
+        "name": "Dete\u00e7\u00e3o de encomendas"
+      },
+      "detect_pet": {
+        "name": "Dete\u00e7\u00e3o de animais de estima\u00e7\u00e3o"
+      },
+      "auto_siren": {
+        "name": "Alarme autom\u00e1tico"
+      },
+      "auto_siren_on_motion": {
+        "name": "Alarme autom\u00e1tico com movimento"
+      },
+      "auto_siren_on_person": {
+        "name": "Alarme autom\u00e1tico com pessoa"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Alarme autom\u00e1tico com quebra de vidro"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Vis\u00e3o noturna",
+        "state": {
+          "auto": "Autom\u00e1tico",
+          "on": "Ligado",
+          "off": "Desligado"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Dura\u00e7\u00e3o de perman\u00eancia",
+        "state": {
+          "20": "20 segundos",
+          "30": "30 segundos",
+          "40": "40 segundos",
+          "50": "50 segundos"
+        }
+      },
+      "light_behavior": {
+        "name": "Comportamento da luz",
+        "state": {
+          "constant": "Constante",
+          "flash": "Intermitente"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Movimento",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Movimento",
+              "person": "Pessoa",
+              "vehicle": "Ve\u00edculo",
+              "package": "Encomenda",
+              "pet": "Animal de estima\u00e7\u00e3o"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Bateria"
+      },
+      "sd_card_status": {
+        "name": "Cart\u00e3o SD",
+        "state": {
+          "present": "Cart\u00e3o inserido",
+          "empty": "Ranhura vazia"
+        }
+      },
+      "sd_card_total": {
+        "name": "Cart\u00e3o SD: total"
+      },
+      "sd_card_used": {
+        "name": "Cart\u00e3o SD: utilizado"
+      },
+      "wifi_rssi": {
+        "name": "Sinal Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "Rede Wi-Fi"
+      },
+      "last_connect_time": {
+        "name": "\u00daltimo tempo de liga\u00e7\u00e3o",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "\u00daltimo motivo de fim",
+            "state": {
+              "idle_release": "Sem espectadores",
+              "stopped": "Parado",
+              "connection_lost": "Liga\u00e7\u00e3o perdida",
+              "camera_closed": "Fechado pela c\u00e2mara",
+              "serve_ended": "O consumidor do fluxo saiu",
+              "no_video": "Sem v\u00eddeo",
+              "media_stalled": "M\u00e9dia parados",
+              "ice_lost": "A c\u00e2mara deixou de responder",
+              "no_media": "Sem m\u00e9dia",
+              "wrong_codec": "Codec de v\u00eddeo errado",
+              "busy": "C\u00e2mara ocupada",
+              "not_ready": "C\u00e2mara n\u00e3o pronta",
+              "open_failed": "N\u00e3o foi poss\u00edvel ligar",
+              "error": "Erro interno"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "Estado da transmiss\u00e3o",
+        "state": {
+          "idle": "Inativo",
+          "connecting": "A ligar",
+          "waking": "A acordar",
+          "streaming": "A transmitir",
+          "retrying": "A tentar de novo",
+          "dormant": "Dormente",
+          "off": "Desligado"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "\u00daltimo motivo de fim",
+            "state": {
+              "idle_release": "Sem espectadores",
+              "stopped": "Parado",
+              "connection_lost": "Liga\u00e7\u00e3o perdida",
+              "camera_closed": "Fechado pela c\u00e2mara",
+              "serve_ended": "O consumidor do fluxo saiu",
+              "no_video": "Sem v\u00eddeo",
+              "media_stalled": "M\u00e9dia parados",
+              "ice_lost": "A c\u00e2mara deixou de responder",
+              "no_media": "Sem m\u00e9dia",
+              "wrong_codec": "Codec de v\u00eddeo errado",
+              "busy": "C\u00e2mara ocupada",
+              "not_ready": "C\u00e2mara n\u00e3o pronta",
+              "open_failed": "N\u00e3o foi poss\u00edvel ligar",
+              "error": "Erro interno"
+            }
+          },
+          "failures": {
+            "name": "Tentativas falhadas"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Ocupa\u00e7\u00e3o"
+      },
+      "person_detected": {
+        "name": "Pessoa detetada"
+      },
+      "vehicle_detected": {
+        "name": "Ve\u00edculo detetado"
+      },
+      "package_detected": {
+        "name": "Encomenda detetada"
+      },
+      "pet_detected": {
+        "name": "Animal de estima\u00e7\u00e3o detetado"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Mover para cima"
+      },
+      "ptz_down": {
+        "name": "Mover para baixo"
+      },
+      "ptz_left": {
+        "name": "Mover para a esquerda"
+      },
+      "ptz_right": {
+        "name": "Mover para a direita"
+      },
+      "ptz_stop": {
+        "name": "Parar"
+      },
+      "ptz_zoom_in": {
+        "name": "Aproximar"
+      },
+      "ptz_zoom_out": {
+        "name": "Afastar"
+      },
+      "reboot": {
+        "name": "Reiniciar"
+      },
+      "refresh_sd_recordings": {
+        "name": "Atualizar grava\u00e7\u00f5es no dispositivo"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sirene"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Holofote"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "\u00daltimo evento"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "O go2rtc rejeita atualiza\u00e7\u00f5es de streams",
+      "description": "O go2rtc respondeu ao registo do stream `{stream}` com um erro, e o stream continuava l\u00e1. O seu ficheiro de configura\u00e7\u00e3o (go2rtc.yaml) cont\u00e9m muito provavelmente um stream listado duas vezes, o que faz com que o go2rtc rejeite todos os registos de todas as c\u00e2maras at\u00e9 o duplicado ser removido manualmente. A vista em direto continua a funcionar com o que o go2rtc j\u00e1 tem; uma c\u00e2mara adicionada ou renomeada desde ent\u00e3o n\u00e3o ser\u00e1 registada. Consulte a sec\u00e7\u00e3o de resolu\u00e7\u00e3o de problemas do README. Esta mensagem desaparece assim que um registo for bem sucedido."
+    },
+    "light_off_subnet": {
+      "title": "{name} est\u00e1 noutra rede",
+      "description": "A luz `{name}` foi vista pela \u00faltima vez em `{address}`, que est\u00e1 fora de todas as redes em que o Home Assistant se encontra ({networks}), pelo que o seu in\u00edcio de sess\u00e3o de controlo local falha. Se a luz tiver alimenta\u00e7\u00e3o, \u00e9 controlada apenas atrav\u00e9s da cloud. Mude a luz para uma rede que o Home Assistant partilhe, ou d\u00ea ao Home Assistant uma rota at\u00e9 ela. Isto desaparece assim que um in\u00edcio de sess\u00e3o local for bem sucedido."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "O go2rtc do Home Assistant l\u00ea o servidor onde as c\u00e2maras publicam",
+      "description": "O go2rtc do Home Assistant est\u00e1 configurado com `url: {url}`, e esse \u00e9 o go2rtc onde as c\u00e2maras AiDot publicariam. O Home Assistant n\u00e3o consegue ler um stream publicado por uma c\u00e2mara, pelo que publicar a\u00ed faria falhar a vista em direto de todas as c\u00e2maras, AiDot ou n\u00e3o. At\u00e9 isto ser corrigido, as c\u00e2maras padr\u00e3o s\u00e3o lidas por pull (sem \u00e1udio HLS sincronizado nem faixa AAC) e as c\u00e2maras SDES (os modelos a bateria e PTZ) n\u00e3o s\u00e3o transmitidas. No Home Assistant OS ou Container, remova a linha `url:` da sec\u00e7\u00e3o `go2rtc:` de configuration.yaml e reinicie: o Home Assistant passa ent\u00e3o a usar o seu go2rtc integrado e as c\u00e2maras publicam no outro servidor. No Home Assistant Core, execute um segundo go2rtc para as c\u00e2maras e aponte AIDOT_GO2RTC_API para ele. Isto desaparece assim que os dois forem servidores diferentes."
+    },
+    "sdes_no_go2rtc": {
+      "title": "Nenhum go2rtc onde publicar as c\u00e2maras SDES",
+      "description": "Nenhum go2rtc respondeu: nada em 127.0.0.1:1984 e nenhum AIDOT_GO2RTC_API, e o go2rtc integrado do Home Assistant n\u00e3o consegue aceitar um stream publicado. As c\u00e2maras SDES (os modelos a bateria e PTZ) n\u00e3o t\u00eam outro caminho e n\u00e3o s\u00e3o transmitidas; as c\u00e2maras padr\u00e3o continuam a transmitir, lidas diretamente. Instale um add-on go2rtc que responda em 127.0.0.1:1984 - a integra\u00e7\u00e3o WebRTC Camera ou o add-on go2rtc - e reinicie. No Home Assistant Core, aponte em vez disso AIDOT_GO2RTC_API para um go2rtc executado por si, e reinicie. Isto desaparece assim que um go2rtc responder."
+    },
+    "weak_wifi": {
+      "title": "{name} tem um sinal Wi-Fi fraco",
+      "description": "A c\u00e2mara `{name}` indica um sinal Wi-Fi de {rssi} dBm. Esteve abaixo de {threshold} dBm durante pelo menos {minutes} minutos, e {stalls} das suas vistas em direto nas \u00faltimas {hours} horas demoraram {slow} segundos ou mais a come\u00e7ar, ou n\u00e3o come\u00e7aram. Com um sinal t\u00e3o fraco, a c\u00e2mara responde muitas vezes e depois n\u00e3o envia v\u00eddeo, pelo que o cart\u00e3o fica em branco at\u00e9 uma nova tentativa conseguir. Aproxime a c\u00e2mara do seu ponto de acesso Wi-Fi, mova ou acrescente um ponto de acesso mais perto da c\u00e2mara, ou retire o que estiver entre os dois. Este aviso desaparece quando o sinal indicar {clear} dBm ou melhor, ou quando a vista em direto voltar a come\u00e7ar prontamente."
+    }
+  }
+}
