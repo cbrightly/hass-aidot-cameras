@@ -1,0 +1,71 @@
+name: Release check
+
+# HACS installs this integration from GitHub releases, so a release whose tag,
+# manifest version, and changelog disagree ships a build users cannot reason
+# about - and HACS will happily serve it. This is the integration's analogue of
+# the library's tag-vs-pyproject check.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to check (defaults to the release tag)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  consistency:
+    name: Tag, manifest and changelog must agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check version consistency
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION}" ]; then
+            tag="${INPUT_VERSION#v}"
+          else
+            tag="${GITHUB_REF_NAME#v}"
+          fi
+          manifest=$(python -c "import json; print(json.load(open('custom_components/aidot/manifest.json'))['version'])")
+
+          echo "release tag:      ${tag}"
+          echo "manifest version: ${manifest}"
+
+          if [ "${tag}" != "${manifest}" ]; then
+            echo "::error::release tag (${tag}) does not match manifest version (${manifest})"
+            exit 1
+          fi
+
+          # Keep-a-Changelog format: "## [2.9.16]"
+          if ! grep -qE "^## \[${manifest//./\\.}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [${manifest}]' entry"
+            echo "Users install this from HACS by version; an unreleased-looking"
+            echo "changelog leaves them with no way to tell what changed."
+            exit 1
+          fi
+          echo "tag, manifest and changelog all agree on ${manifest}"
+
+      - name: Library floor must be a released version
+        run: |
+          set -euo pipefail
+          req=$(python -c "import json; print([r for r in json.load(open('custom_components/aidot/manifest.json'))['requirements'] if 'python-aidot-cameras' in r][0])")
+          floor=$(python -c "
+          import re, sys
+          m = re.search(r'>=\s*([0-9]+(?:\.[0-9]+)*(?:(?:a|b|rc)[0-9]+)?)', '''$req''')
+          sys.exit('no version floor in the requirement') if not m else print(m.group(1))
+          ")
+          echo "library floor: ${floor}"
+          # A floor that is not on PyPI makes the integration uninstallable.
+          # Keep the pre-release suffix: '>=1.0.0rc21' must check 1.0.0rc21,
+          # not 1.0.0, which may not exist yet.
+          python -m pip download --no-deps --dest /tmp/floorcheck \
+            "python-aidot-cameras==${floor}" >/dev/null
+          echo "python-aidot-cameras==${floor} exists on PyPI"

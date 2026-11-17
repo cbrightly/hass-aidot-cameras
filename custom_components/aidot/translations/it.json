@@ -1,0 +1,494 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Inserisci le credenziali del tuo account AiDot.",
+        "data": {
+          "country_code": "Paese",
+          "username": "Indirizzo email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Inserisci di nuovo la password per {username}.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "description": "Aggiorna le credenziali per {username}.",
+        "data": {
+          "country_code": "Paese",
+          "username": "Indirizzo email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Indirizzo email o password non validi.",
+      "cannot_connect": "Impossibile connettersi ai server AiDot."
+    },
+    "abort": {
+      "already_configured": "L'account \u00e8 gi\u00e0 configurato.",
+      "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso.",
+      "reauth_successful": "La riautenticazione ha avuto successo.",
+      "reconfigure_successful": "La riconfigurazione \u00e8 stata completata con successo."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni AiDot",
+        "menu_options": {
+          "streaming": "Vista dal vivo e connessione",
+          "audio": "Audio e registrazioni",
+          "notifications": "Notifiche di movimento - destinatari e testo",
+          "camera_notifications": "Notifiche di movimento - per telecamera"
+        }
+      },
+      "streaming": {
+        "title": "Vista dal vivo e connessione",
+        "data": {
+          "serve_port_base": "Porta base dei flussi delle telecamere",
+          "connection_mode": "Modalit\u00e0 di connessione",
+          "sdes_fast_liveplay": "Connessione rapida SDES",
+          "mains_idle_s": "Mantenimento a caldo delle telecamere alimentate a rete (secondi)",
+          "enable_local_control": "Controllo locale della telecamera",
+          "startup_prewarm": "Preriscalda le sessioni delle telecamere all'avvio",
+          "motion_prewarm": "Preconnessione al movimento",
+          "sd_list_on_view": "Elenca la scheda SD quando viene guardata una telecamera a batteria"
+        },
+        "data_description": {
+          "serve_port_base": "Porta locale di base per il servizio locale, usato dalle telecamere standard (DTLS) quando non pubblicano in go2rtc; ogni telecamera usa base..base+399. Modificala solo se \u00e8 in conflitto con un altro servizio.",
+          "connection_mode": "Come si connettono le telecamere. Automatico (consigliato) offre tutti i percorsi e preferisce la LAN, mantenendo il relay cloud come ripiego: le telecamere sulla stessa LAN si connettono direttamente e solo una telecamera senza percorso diretto passa dal relay. Solo LAN salta il relay per un avvio pi\u00f9 rapido (~1 s contro ~3-4 s), ma una telecamera che non riesce a raggiungere direttamente Home Assistant non si connetter\u00e0 (le telecamere a batteria mantengono comunque il relay: \u00e8 il loro unico percorso di ritorno dopo un risveglio dal cloud). Ogni telecamera riporta il percorso in uso in Diagnostica come media_path.",
+          "sdes_fast_liveplay": "Come l'app ufficiale: salta l'attesa di livePlayResp e passa subito all'handshake video, cos\u00ec le telecamere SDES (a batteria) partono ~4,5 s prima. ATTIVO per impostazione predefinita. La telecamera PTZ \u00e8 esclusa automaticamente (il suo handshake richiede il percorso pi\u00f9 lento). Se la vista dal vivo di una telecamera specifica dovesse ridursi a un'istantanea, disattiva questa opzione.",
+          "mains_idle_s": "Per quanto tempo mantenere a caldo la sessione dal vivo di una telecamera alimentata a rete dopo l'ultimo spettatore, cos\u00ec che riaprirla sia immediato invece di pagare l'intero handshake dell'avvio a freddo. Predefinito 0 = non rilasciare mai (sempre a caldo, viste immediate). Imposta una finestra positiva (ad es. 300 = 5 min) per lasciare che le telecamere non guardate vadano a riposo; una telecamera a riposo si riconnette alla visualizzazione in circa 2,4-3,3 s. Ogni telecamera a caldo continua a decifrare, il che costa CPU all'host. Le telecamere a batteria ignorano questa impostazione: trasmettono solo mentre qualcuno le sta guardando (anche l'aggiornamento dell'elenco della scheda SD di una telecamera a batteria la risveglia brevemente) e si fermano entro circa mezzo minuto dall'uscita dell'ultimo spettatore (pi\u00f9 i 30 s propri di Home Assistant per la finestra HLS).",
+          "enable_local_control": "Instrada le impostazioni della telecamera (LED, rilevamento del movimento, visione notturna, sensibilit\u00e0, volume, tracciamento PTZ) sulla LAN invece che sul cloud, per le telecamere alimentate a rete idonee. Pi\u00f9 veloce e funziona durante le interruzioni del cloud; ripiega automaticamente sul cloud. Non influisce sul video. Le telecamere a batteria vengono saltate.",
+          "startup_prewarm": "Apre in background all'avvio (in modo scaglionato) una sessione su ogni telecamera alimentata a rete, cos\u00ec che la prima vista dal vivo dopo un riavvio sia immediata invece di pagare l'avvio a freddo (circa 2,4-3,3 s su una telecamera alimentata a rete). Attivo per impostazione predefinita; disattivalo per risparmiare CPU dell'host quando le viste sono rare. Le telecamere a batteria sono escluse.",
+          "motion_prewarm": "Apre la sessione di una telecamera alimentata a rete quando segnala un movimento, cos\u00ec che una vista dal vivo aperta poco dopo parta a caldo invece di pagare l'avvio a freddo (circa 3 s); la sessione resta poi aperta finch\u00e9 l'impostazione di mantenimento a caldo la conserva. Disattivato per impostazione predefinita: una notifica di movimento apre il clip del cloud, non una vista dal vivo, quindi la maggior parte di queste sessioni non trasmette a nessuno. Solo telecamere alimentate a rete; le telecamere a batteria non vengono mai preconnesse.",
+          "sd_list_on_view": "Solo per le telecamere a batteria. Mentre \u00e8 in corso una vista dal vivo (o un camera.record) di una telecamera a batteria, viene chiesto alla telecamera anche che cosa contiene la sua scheda SD, sulla sessione che quella vista ha gi\u00e0 aperta, cos\u00ec la cartella On device del browser multimediale si riempie senza premere Aggiorna le registrazioni sul dispositivo. Non riattiva mai la telecamera, non apre una sessione propria e non tiene sveglia la telecamera dopo la chiusura della vista; una vista pi\u00f9 breve di qualche secondo non ottiene alcun elenco. Al massimo un elenco per telecamera ogni 5 minuti, e nessuno finch\u00e9 l'elenco ha meno di 15 minuti. Disattivata per impostazione predefinita: l'elenco condivide il collegamento Wi-Fi della telecamera con l'immagine dal vivo. Ha effetto senza ricaricare."
+        }
+      },
+      "audio": {
+        "title": "Audio e registrazioni",
+        "data": {
+          "sdes_audio_gain_db": "Guadagno audio della telecamera (dB)",
+          "publish_mode": "Pubblicazione e audio in HLS e registrazioni"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Regolazione del volume dell'audio della telecamera, applicata dopo il normalizzatore di livello che la libreria esegue su ogni telecamera. 0 dB (il valore predefinito) riproduce una telecamera a batteria o PTZ allo stesso volume di una M3 Pro. Alzalo se una telecamera \u00e8 troppo bassa, abbassalo se distorce. Si applica alle telecamere SDES (a batteria e PTZ). Le installazioni che hanno salvato il vecchio valore predefinito di -8 dB lo mantengono; imposta 0 per allinearle alle altre.",
+          "publish_mode": "Come ogni telecamera raggiunge go2rtc e come la finestra HLS di Home Assistant (le schede Immagine) e le registrazioni di camera.record ottengono il suono. Le viste WebRTC portano l'audio proprio della telecamera in ogni modalit\u00e0. La pubblicazione diretta invia video e audio di ogni telecamera direttamente a go2rtc senza alcun processo ffmpeg intermedio: le telecamere SDES pubblicano sempre, e le telecamere standard (DTLS) pubblicano in un go2rtc sulla porta 1984 (o AIDOT_GO2RTC_API) quando risponde, altrimenti mantengono la loro porta di servizio locale. Nulla viene pubblicato nel go2rtc incluso in Home Assistant. Sincronizzato (il valore predefinito) fa inoltre leggere alla finestra HLS e alle registrazioni il flusso di ogni telecamera alimentata a rete direttamente da questa integrazione, con suono e immagine su un unico orologio (le telecamere a batteria continuano a leggere quello di go2rtc); tramite go2rtc, una registrazione che inizia mentre la telecamera sta gi\u00e0 trasmettendo pu\u00f2 avere il suono fino a circa 0,75 s in ritardo rispetto all'immagine. La copia AAC dell'audio della telecamera che d\u00e0 il suono a HLS e alle registrazioni costa circa il 2-3 % di un core della CPU per ogni telecamera in trasmissione; le modalit\u00e0 senza audio lo risparmiano. Le modalit\u00e0 ffmpeg tornano a un processo ffmpeg per ogni telecamera standard; le telecamere SDES continuano a pubblicare direttamente."
+        }
+      },
+      "notifications": {
+        "title": "Notifiche di movimento",
+        "data": {
+          "targets": "Destinatari predefiniti delle notifiche",
+          "cooldown_s": "Tempo di attesa per telecamera (secondi)",
+          "title": "Titolo della notifica",
+          "message": "Messaggio della notifica",
+          "open_in_app": "Apri il clip nell'app Home Assistant (sperimentale)"
+        },
+        "data_description": {
+          "targets": "I servizi di notifica a cui inviare (ad esempio un telefono con l'app companion). Usati da ogni telecamera che non imposta i propri destinatari. Puoi digitare un nome di servizio non presente nell'elenco.",
+          "cooldown_s": "Dopo una notifica per una telecamera, gli ulteriori movimenti di quella telecamera non vengono inviati per questo tempo. Un rilevamento di persona supera comunque un tempo di attesa avviato da un semplice movimento. 0 disattiva il tempo di attesa.",
+          "title": "Segnaposto: camera, event (motion/person), event_title (Motion/Person), time, device_id. Scrivi ciascuno tra parentesi graffe nel titolo o nel messaggio.",
+          "message": "Gli stessi segnaposto del titolo.",
+          "open_in_app": "Quando si tocca una notifica, riproduce il clip dell'evento in una pagina all'interno dell'app Home Assistant. Disattivato: il tocco apre il link proprio del clip, che l'app per iPhone apre in Safari."
+        }
+      },
+      "camera_notifications": {
+        "title": "Notifiche di movimento - scegli una telecamera",
+        "data": {
+          "camera": "Telecamera"
+        },
+        "data_description": {
+          "camera": "La telecamera di cui modificare le impostazioni di notifica."
+        }
+      },
+      "camera_notify": {
+        "title": "Notifiche di movimento - {camera}",
+        "data": {
+          "events": "Invia una notifica per",
+          "targets": "Destinatari per questa telecamera"
+        },
+        "data_description": {
+          "events": "Disattivato: mai. Tutti: ogni evento di movimento e di persona. Solo persona: solo quando la telecamera segnala una persona.",
+          "targets": "Lascia vuoto per usare i destinatari predefiniti."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Nessuna telecamera \u00e8 ancora stata caricata. Riprova quando l'integrazione ha terminato l'avvio."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Automatico - LAN preferita, relay come ripiego (consigliato)",
+        "lan_direct": "Solo LAN (la pi\u00f9 veloce, solo sulla stessa rete)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Disattivato",
+        "all": "Tutti gli eventi di movimento e di persona",
+        "person": "Solo persona"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Pubblicazione diretta, audio sincronizzato per HLS e registrazioni (consigliato)",
+        "go2rtc": "Pubblicazione diretta, HLS e registrazioni tramite go2rtc",
+        "no_hls_audio": "Pubblicazione diretta, nessun audio in HLS e registrazioni",
+        "ffmpeg": "ffmpeg per ogni telecamera standard",
+        "ffmpeg_no_hls_audio": "ffmpeg per ogni telecamera standard, nessun audio in HLS e registrazioni"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "Non \u00e8 stato possibile decodificare alcun audio da {media} - controlla l'URL o il percorso del file multimediale."
+    },
+    "talk_session_failed": {
+      "message": "Impossibile stabilire una sessione di conversazione: la telecamera non era raggiungibile, oppure nessuna sessione poteva trasportare la voce. Non \u00e8 necessaria una vista dal vivo."
+    },
+    "ptz_failed": {
+      "message": "Il comando PTZ {direction} non \u00e8 stato inviato (la telecamera deve essere in trasmissione - apri prima la vista dal vivo)."
+    },
+    "sd_playback_not_running": {
+      "message": "Su questa telecamera non \u00e8 in corso il recupero di alcuna registrazione della scheda SD."
+    },
+    "command_failed": {
+      "message": "AiDot {action} non riuscito: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} \u00e8 stato rifiutato dal dispositivo."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} \u00e8 per le telecamere a batteria; questa telecamera \u00e8 alimentata a rete e non va mai in sospensione."
+    },
+    "wake_refused": {
+      "message": "Il cloud non ha accettato la richiesta di risveglio (vedi il registro)."
+    },
+    "sleep_refused": {
+      "message": "Il cloud non ha accettato la richiesta di sospensione (vedi il registro)."
+    },
+    "camera_in_use": {
+      "message": "La telecamera sta trasmettendo o recuperando una registrazione della scheda; interrompi prima questa operazione, oppure lascia terminare la vista."
+    },
+    "sd_recording_not_found": {
+      "message": "Nessuna registrazione della scheda corrisponde; indica la chiave della registrazione dal browser multimediale o il suo orario di inizio esatto, e aggiorna prima l'elenco della scheda."
+    },
+    "sd_delete_no_session": {
+      "message": "La telecamera deve essere in trasmissione per eliminare una registrazione della scheda; apri prima la sua vista dal vivo."
+    },
+    "sd_delete_refused": {
+      "message": "La telecamera ha rifiutato di eliminare la registrazione."
+    },
+    "sd_recording_ambiguous": {
+      "message": "Pi\u00f9 di una registrazione della scheda inizia in quel secondo; indica quella da eliminare tramite la sua chiave dal browser multimediale."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Sensibilit\u00e0 al movimento"
+      },
+      "speaker_volume": {
+        "name": "Volume dell'altoparlante"
+      },
+      "light_brightness": {
+        "name": "Luminosit\u00e0 della luce"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "Luce quando compare qualcuno"
+      },
+      "camera_audio": {
+        "name": "Audio della telecamera (nel flusso HA)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Microfono (privacy audio)"
+      },
+      "motion_detection": {
+        "name": "Rilevamento del movimento"
+      },
+      "osd_timestamp": {
+        "name": "Filigrana"
+      },
+      "ptz_tracking": {
+        "name": "Tracciamento automatico"
+      },
+      "sound_all": {
+        "name": "Tutti i rilevamenti sonori"
+      },
+      "sound_baby_cry": {
+        "name": "Rilevamento pianto di neonato"
+      },
+      "sound_dog_bark": {
+        "name": "Rilevamento abbaio di cane"
+      },
+      "sound_enable": {
+        "name": "Rilevamento sonoro"
+      },
+      "sound_glass_break": {
+        "name": "Rilevamento rottura vetri"
+      },
+      "sound_smoke_t3": {
+        "name": "Rilevamento allarme fumo (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "Rilevamento allarme fumo (T4)"
+      },
+      "status_led": {
+        "name": "LED di stato"
+      },
+      "voice_prompts": {
+        "name": "Messaggi vocali"
+      },
+      "detect_human": {
+        "name": "Rilevamento persone"
+      },
+      "detect_vehicle": {
+        "name": "Rilevamento veicoli"
+      },
+      "detect_package": {
+        "name": "Rilevamento pacchi"
+      },
+      "detect_pet": {
+        "name": "Rilevamento animali domestici"
+      },
+      "auto_siren": {
+        "name": "Allarme automatico"
+      },
+      "auto_siren_on_motion": {
+        "name": "Allarme automatico al movimento"
+      },
+      "auto_siren_on_person": {
+        "name": "Allarme automatico alla persona"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Allarme automatico alla rottura vetri"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Visione notturna",
+        "state": {
+          "auto": "Automatico",
+          "on": "Acceso",
+          "off": "Spento"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Durata di permanenza",
+        "state": {
+          "20": "20 secondi",
+          "30": "30 secondi",
+          "40": "40 secondi",
+          "50": "50 secondi"
+        }
+      },
+      "light_behavior": {
+        "name": "Comportamento della luce",
+        "state": {
+          "constant": "Costante",
+          "flash": "Lampeggio"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Movimento",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Movimento",
+              "person": "Persona",
+              "vehicle": "Veicolo",
+              "package": "Pacco",
+              "pet": "Animale domestico"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Batteria"
+      },
+      "sd_card_status": {
+        "name": "Scheda SD",
+        "state": {
+          "present": "Scheda inserita",
+          "empty": "Slot vuoto"
+        }
+      },
+      "sd_card_total": {
+        "name": "Scheda SD: totale"
+      },
+      "sd_card_used": {
+        "name": "Scheda SD: in uso"
+      },
+      "wifi_rssi": {
+        "name": "Segnale Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "Rete Wi-Fi"
+      },
+      "last_connect_time": {
+        "name": "Ultimo tempo di connessione",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Ultimo motivo di chiusura",
+            "state": {
+              "idle_release": "Nessuno spettatore",
+              "stopped": "Arrestato",
+              "connection_lost": "Connessione persa",
+              "camera_closed": "Chiuso dalla telecamera",
+              "serve_ended": "Il consumatore del flusso non c'\u00e8 pi\u00f9",
+              "no_video": "Nessun video",
+              "media_stalled": "Media interrotti",
+              "ice_lost": "La telecamera non risponde pi\u00f9",
+              "no_media": "Nessun media",
+              "wrong_codec": "Codec video errato",
+              "busy": "Telecamera occupata",
+              "not_ready": "Telecamera non pronta",
+              "open_failed": "Connessione non riuscita",
+              "error": "Errore interno"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "Stato del flusso",
+        "state": {
+          "idle": "Inattivo",
+          "connecting": "Connessione",
+          "waking": "Riattivazione",
+          "streaming": "In trasmissione",
+          "retrying": "Nuovo tentativo",
+          "dormant": "Dormiente",
+          "off": "Spento"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Ultimo motivo di chiusura",
+            "state": {
+              "idle_release": "Nessuno spettatore",
+              "stopped": "Arrestato",
+              "connection_lost": "Connessione persa",
+              "camera_closed": "Chiuso dalla telecamera",
+              "serve_ended": "Il consumatore del flusso non c'\u00e8 pi\u00f9",
+              "no_video": "Nessun video",
+              "media_stalled": "Media interrotti",
+              "ice_lost": "La telecamera non risponde pi\u00f9",
+              "no_media": "Nessun media",
+              "wrong_codec": "Codec video errato",
+              "busy": "Telecamera occupata",
+              "not_ready": "Telecamera non pronta",
+              "open_failed": "Connessione non riuscita",
+              "error": "Errore interno"
+            }
+          },
+          "failures": {
+            "name": "Tentativi falliti"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Presenza"
+      },
+      "person_detected": {
+        "name": "Persona rilevata"
+      },
+      "vehicle_detected": {
+        "name": "Veicolo rilevato"
+      },
+      "package_detected": {
+        "name": "Pacco rilevato"
+      },
+      "pet_detected": {
+        "name": "Animale domestico rilevato"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Muovi in alto"
+      },
+      "ptz_down": {
+        "name": "Muovi in basso"
+      },
+      "ptz_left": {
+        "name": "Muovi a sinistra"
+      },
+      "ptz_right": {
+        "name": "Muovi a destra"
+      },
+      "ptz_stop": {
+        "name": "Ferma"
+      },
+      "ptz_zoom_in": {
+        "name": "Ingrandisci"
+      },
+      "ptz_zoom_out": {
+        "name": "Riduci"
+      },
+      "reboot": {
+        "name": "Riavvia"
+      },
+      "refresh_sd_recordings": {
+        "name": "Aggiorna le registrazioni sul dispositivo"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sirena"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Faro"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "Ultimo evento"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "go2rtc rifiuta gli aggiornamenti dei flussi",
+      "description": "go2rtc ha risposto alla registrazione del flusso `{stream}` con un errore, e il flusso era ancora presente. Molto probabilmente il suo file di configurazione (go2rtc.yaml) contiene un flusso elencato due volte, il che fa s\u00ec che go2rtc rifiuti ogni registrazione di flusso per ogni telecamera finch\u00e9 il duplicato non viene rimosso a mano. La vista dal vivo continua a funzionare con ci\u00f2 che go2rtc possiede gi\u00e0; una telecamera aggiunta o rinominata da allora non verr\u00e0 registrata. Vedi la sezione sulla risoluzione dei problemi del README. Questo messaggio scompare quando una registrazione di flusso va a buon fine."
+    },
+    "light_off_subnet": {
+      "title": "{name} \u00e8 su un'altra rete",
+      "description": "La luce `{name}` \u00e8 stata segnalata l'ultima volta all'indirizzo `{address}`, che \u00e8 al di fuori di tutte le reti su cui si trova Home Assistant ({networks}), quindi il suo accesso per il controllo locale fallisce. Se la luce \u00e8 alimentata, viene controllata solo tramite il cloud. Sposta la luce su una rete condivisa con Home Assistant, oppure fornisci a Home Assistant un percorso per raggiungerla. Questo messaggio scompare quando un accesso locale va a buon fine."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "Il go2rtc di Home Assistant legge il server in cui pubblicano le telecamere",
+      "description": "Il go2rtc di Home Assistant \u00e8 configurato con `url: {url}`, e quello \u00e8 il go2rtc in cui pubblicherebbero le telecamere AiDot. Home Assistant non pu\u00f2 leggere un flusso pubblicato da una telecamera, quindi pubblicare l\u00ec farebbe fallire la vista dal vivo di ogni telecamera, AiDot o meno. Finch\u00e9 il problema non viene risolto, le telecamere standard vengono lette in pull (niente audio HLS sincronizzato n\u00e9 traccia AAC) e le telecamere SDES (i modelli a batteria e PTZ) non vengono trasmesse. Su Home Assistant OS o Container, rimuovi la riga `url:` dalla sezione `go2rtc:` di configuration.yaml e riavvia: Home Assistant user\u00e0 allora il suo go2rtc integrato e le telecamere pubblicheranno nell'altro server. Su Home Assistant Core, esegui un secondo go2rtc per le telecamere e imposta AIDOT_GO2RTC_API su di esso. Questo messaggio scompare quando i due sono server diversi."
+    },
+    "sdes_no_go2rtc": {
+      "title": "Nessun go2rtc in cui pubblicare le telecamere SDES",
+      "description": "Nessun go2rtc ha risposto: niente su 127.0.0.1:1984 e nessun AIDOT_GO2RTC_API, e il go2rtc integrato in Home Assistant non pu\u00f2 accettare un flusso pubblicato. Le telecamere SDES (i modelli a batteria e PTZ) non hanno altri percorsi e non vengono trasmesse; le telecamere standard continuano a trasmettere, lette direttamente. Installa un componente aggiuntivo go2rtc che risponda su 127.0.0.1:1984 - l'integrazione WebRTC Camera o il componente aggiuntivo go2rtc - e riavvia. Su Home Assistant Core, imposta invece AIDOT_GO2RTC_API su un go2rtc gestito da te, e riavvia. Questo messaggio scompare quando un go2rtc risponde."
+    },
+    "weak_wifi": {
+      "title": "{name} ha un segnale Wi-Fi debole",
+      "description": "La telecamera `{name}` segnala un segnale Wi-Fi di {rssi} dBm. \u00c8 rimasto sotto {threshold} dBm per almeno {minutes} minuti, e {stalls} delle sue viste dal vivo nelle ultime {hours} ore hanno impiegato {slow} secondi o pi\u00f9 per partire, oppure non sono partite. Con un segnale cos\u00ec debole la telecamera spesso risponde e poi non invia video, quindi la scheda resta vuota finch\u00e9 un nuovo tentativo non va a buon fine. Avvicina la telecamera al suo punto di accesso Wi-Fi, sposta o aggiungi un punto di accesso pi\u00f9 vicino alla telecamera, oppure togli ci\u00f2 che si trova in mezzo. Questo avviso scompare quando il segnale segna {clear} dBm o meglio, oppure quando la vista dal vivo torna a partire prontamente."
+    }
+  }
+}
