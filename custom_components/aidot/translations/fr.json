@@ -1,0 +1,510 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Saisissez les identifiants de votre compte AiDot.",
+        "data": {
+          "country_code": "Pays",
+          "username": "Adresse e-mail",
+          "password": "Mot de passe"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Saisissez \u00e0 nouveau votre mot de passe pour {username}.",
+        "data": {
+          "password": "Mot de passe"
+        }
+      },
+      "reconfigure": {
+        "description": "Mettez \u00e0 jour les identifiants de {username}.",
+        "data": {
+          "country_code": "Pays",
+          "username": "Adresse e-mail",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Adresse e-mail ou mot de passe non valide.",
+      "cannot_connect": "Impossible de se connecter aux serveurs AiDot."
+    },
+    "abort": {
+      "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9.",
+      "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours.",
+      "reauth_successful": "La r\u00e9authentification a r\u00e9ussi.",
+      "reconfigure_successful": "La reconfiguration a r\u00e9ussi."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options AiDot",
+        "menu_options": {
+          "streaming": "Vue en direct et connexion",
+          "audio": "Audio et enregistrements",
+          "notifications": "Notifications de mouvement - cibles et formulation",
+          "camera_notifications": "Notifications de mouvement - par cam\u00e9ra"
+        }
+      },
+      "streaming": {
+        "title": "Vue en direct et connexion",
+        "data": {
+          "serve_port_base": "Port de base des flux des cam\u00e9ras",
+          "connection_mode": "Mode de connexion",
+          "sdes_fast_liveplay": "Connexion rapide SDES",
+          "mains_idle_s": "Maintien \u00e0 chaud des cam\u00e9ras sur secteur (secondes)",
+          "enable_local_control": "Contr\u00f4le local des cam\u00e9ras",
+          "startup_prewarm": "Pr\u00e9chauffer les sessions des cam\u00e9ras au d\u00e9marrage",
+          "motion_prewarm": "Pr\u00e9connexion sur mouvement",
+          "sd_list_on_view": "Lister la carte SD lorsqu'une cam\u00e9ra sur batterie est regard\u00e9e"
+        },
+        "data_description": {
+          "serve_port_base": "Port local de base du service local, utilis\u00e9 par les cam\u00e9ras standard (DTLS) lorsqu'elles ne publient pas dans go2rtc ; chaque cam\u00e9ra utilise base..base+399. Ne le modifiez qu'en cas de conflit avec un autre service.",
+          "connection_mode": "Fa\u00e7on dont les cam\u00e9ras se connectent. Automatique (recommand\u00e9) propose tous les chemins et privil\u00e9gie le r\u00e9seau local, en gardant le relais cloud en secours : les cam\u00e9ras du m\u00eame r\u00e9seau local se connectent directement, et seule une cam\u00e9ra sans route directe passe par le relais. LAN uniquement ignore le relais pour un d\u00e9marrage plus rapide (~1 s contre ~3-4 s), mais une cam\u00e9ra qui ne peut pas joindre Home Assistant directement ne se connectera pas (les cam\u00e9ras sur batterie gardent le relais dans tous les cas : c'est leur seul chemin de retour apr\u00e8s un r\u00e9veil par le cloud). Chaque cam\u00e9ra indique le chemin utilis\u00e9 dans Diagnostics sous media_path.",
+          "sdes_fast_liveplay": "Comme l'application officielle : ignore l'attente de livePlayResp et passe directement \u00e0 la n\u00e9gociation vid\u00e9o, de sorte que les cam\u00e9ras SDES (sur batterie) d\u00e9marrent ~4,5 s plus t\u00f4t. ACTIV\u00c9 par d\u00e9faut. La cam\u00e9ra PTZ est automatiquement exclue (sa n\u00e9gociation n\u00e9cessite le chemin plus lent). Si la vue en direct d'une cam\u00e9ra en particulier retombe sur un instantan\u00e9, d\u00e9sactivez cette option.",
+          "mains_idle_s": "Dur\u00e9e pendant laquelle la session en direct d'une cam\u00e9ra sur secteur est maintenue \u00e0 chaud apr\u00e8s le dernier spectateur, afin que sa r\u00e9ouverture soit instantan\u00e9e au lieu de subir toute la n\u00e9gociation d'un d\u00e9marrage \u00e0 froid. Par d\u00e9faut 0 = ne jamais lib\u00e9rer (toujours \u00e0 chaud, vues instantan\u00e9es). D\u00e9finissez une fen\u00eatre positive (p. ex. 300 = 5 min) pour laisser les cam\u00e9ras non regard\u00e9es se mettre en veille ; une cam\u00e9ra en veille se reconnecte \u00e0 l'affichage en 2,4 \u00e0 3,3 s environ. Chaque cam\u00e9ra \u00e0 chaud continue de d\u00e9chiffrer, ce qui consomme du processeur sur l'h\u00f4te. Les cam\u00e9ras sur batterie ignorent ce r\u00e9glage : elles ne diffusent que lorsque quelqu'un les regarde (l'actualisation de la liste de la carte SD d'une cam\u00e9ra sur batterie la r\u00e9veille aussi bri\u00e8vement) et s'arr\u00eatent environ une demi-minute apr\u00e8s le d\u00e9part du dernier spectateur (plus les 30 s propres \u00e0 Home Assistant pour la bo\u00eete de dialogue HLS).",
+          "enable_local_control": "Achemine les r\u00e9glages des cam\u00e9ras (LED, d\u00e9tection de mouvement, vision nocturne, sensibilit\u00e9, volume, suivi PTZ) par le r\u00e9seau local plut\u00f4t que par le cloud, pour les cam\u00e9ras sur secteur compatibles. Plus rapide et fonctionne pendant les pannes du cloud ; bascule automatiquement sur le cloud en cas de besoin. N'affecte pas la vid\u00e9o. Les cam\u00e9ras sur batterie sont ignor\u00e9es.",
+          "startup_prewarm": "Ouvre une session sur chaque cam\u00e9ra sur secteur en arri\u00e8re-plan au d\u00e9marrage (de fa\u00e7on \u00e9chelonn\u00e9e), afin que la premi\u00e8re vue en direct apr\u00e8s un red\u00e9marrage soit instantan\u00e9e au lieu de subir le d\u00e9marrage \u00e0 froid (environ 2,4 \u00e0 3,3 s sur une cam\u00e9ra sur secteur). Activ\u00e9 par d\u00e9faut ; d\u00e9sactivez-le pour \u00e9conomiser le processeur de l'h\u00f4te lorsque les vues sont rares. Les cam\u00e9ras sur batterie sont exclues.",
+          "motion_prewarm": "Ouvre la session d'une cam\u00e9ra sur secteur lorsqu'elle signale un mouvement, afin qu'une vue en direct ouverte peu apr\u00e8s d\u00e9marre \u00e0 chaud au lieu de subir le d\u00e9marrage \u00e0 froid (environ 3 s) ; la session reste ensuite ouverte aussi longtemps que le r\u00e9glage de maintien \u00e0 chaud la conserve. D\u00e9sactiv\u00e9 par d\u00e9faut : une notification de mouvement ouvre le clip cloud, pas une vue en direct, si bien que la plupart de ces sessions ne diffusent pour personne. Cam\u00e9ras sur secteur uniquement ; les cam\u00e9ras sur batterie ne sont jamais pr\u00e9connect\u00e9es.",
+          "sd_list_on_view": "Cam\u00e9ras sur batterie uniquement. Pendant qu'une vue en direct (ou un camera.record) d'une cam\u00e9ra sur batterie est en cours, la cam\u00e9ra est aussi interrog\u00e9e sur le contenu de sa carte SD, via la session que cette vue a d\u00e9j\u00e0 ouverte, afin que le dossier On device du navigateur multim\u00e9dia se remplisse sans appuyer sur Actualiser les enregistrements de l'appareil. Cela ne r\u00e9veille jamais la cam\u00e9ra, n'ouvre aucune session propre et ne maintient pas la cam\u00e9ra \u00e9veill\u00e9e apr\u00e8s la fermeture de la vue ; une vue de moins de quelques secondes n'obtient pas de liste. Au plus une liste par cam\u00e9ra toutes les 5 minutes, et aucune tant que la liste a moins de 15 minutes. D\u00e9sactiv\u00e9 par d\u00e9faut : la liste partage la liaison Wi-Fi de la cam\u00e9ra avec l'image en direct. Prend effet sans rechargement."
+        }
+      },
+      "audio": {
+        "title": "Audio et enregistrements",
+        "data": {
+          "sdes_audio_gain_db": "Gain audio des cam\u00e9ras (dB)",
+          "publish_mode": "Publication, et audio dans HLS et les enregistrements"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Ajustement du volume de l'audio des cam\u00e9ras, appliqu\u00e9 apr\u00e8s le normaliseur de niveau que la biblioth\u00e8que ex\u00e9cute sur chaque cam\u00e9ra. 0 dB (valeur par d\u00e9faut) restitue une cam\u00e9ra sur batterie ou PTZ au m\u00eame niveau sonore qu'une M3 Pro. Augmentez-le si une cam\u00e9ra est trop faible, r\u00e9duisez-le si elle sature. S'applique aux cam\u00e9ras SDES (sur batterie et PTZ). Les installations qui ont enregistr\u00e9 l'ancienne valeur par d\u00e9faut de -8 dB la conservent ; d\u00e9finissez 0 pour les aligner sur les autres.",
+          "publish_mode": "Fa\u00e7on dont chaque cam\u00e9ra atteint go2rtc, et dont la bo\u00eete de dialogue HLS de Home Assistant (les cartes Image) et les enregistrements camera.record obtiennent leur son. Les vues WebRTC transportent l'audio propre \u00e0 la cam\u00e9ra dans tous les modes. La publication directe envoie la vid\u00e9o et l'audio de chaque cam\u00e9ra directement dans go2rtc, sans processus ffmpeg interm\u00e9diaire : les cam\u00e9ras SDES publient toujours, et les cam\u00e9ras standard (DTLS) publient dans un go2rtc sur le port 1984 (ou AIDOT_GO2RTC_API) lorsqu'il r\u00e9pond, sinon elles gardent leur port de service local. Rien n'est publi\u00e9 dans le go2rtc fourni avec Home Assistant. Synchronis\u00e9 (valeur par d\u00e9faut) fait en outre lire \u00e0 la bo\u00eete de dialogue HLS et aux enregistrements le flux de chaque cam\u00e9ra sur secteur directement depuis cette int\u00e9gration, avec le son et l'image sur une m\u00eame horloge (les cam\u00e9ras sur batterie continuent de lire celui de go2rtc) ; via go2rtc, un enregistrement qui commence alors que la cam\u00e9ra diffuse d\u00e9j\u00e0 peut avoir le son jusqu'\u00e0 environ 0,75 s en retard sur l'image. La copie AAC de l'audio de la cam\u00e9ra qui donne le son \u00e0 HLS et aux enregistrements co\u00fbte environ 2 \u00e0 3 % d'un c\u0153ur de processeur par cam\u00e9ra en diffusion ; les modes sans audio l'\u00e9conomisent. Les modes ffmpeg reviennent \u00e0 un processus ffmpeg par cam\u00e9ra standard ; les cam\u00e9ras SDES publient toujours directement."
+        }
+      },
+      "notifications": {
+        "title": "Notifications de mouvement",
+        "data": {
+          "targets": "Cibles de notification par d\u00e9faut",
+          "cooldown_s": "D\u00e9lai de r\u00e9pit par cam\u00e9ra (secondes)",
+          "title": "Titre de la notification",
+          "message": "Message de la notification",
+          "open_in_app": "Ouvrir le clip dans l'application Home Assistant (exp\u00e9rimental)"
+        },
+        "data_description": {
+          "targets": "Les services de notification auxquels envoyer (par exemple un t\u00e9l\u00e9phone dot\u00e9 de l'application compagnon). Utilis\u00e9s par toute cam\u00e9ra qui ne d\u00e9finit pas ses propres cibles. Vous pouvez saisir un nom de service qui ne figure pas dans la liste.",
+          "cooldown_s": "Apr\u00e8s une notification pour une cam\u00e9ra, les mouvements suivants de cette cam\u00e9ra ne sont pas envoy\u00e9s pendant cette dur\u00e9e. Une d\u00e9tection de personne passe tout de m\u00eame pendant un d\u00e9lai de r\u00e9pit d\u00e9clench\u00e9 par un simple mouvement. 0 d\u00e9sactive le d\u00e9lai de r\u00e9pit.",
+          "title": "Espaces r\u00e9serv\u00e9s : camera, event (motion/person), event_title (Motion/Person), time, device_id. \u00c9crivez chacun entre accolades dans le titre ou le message.",
+          "message": "M\u00eames espaces r\u00e9serv\u00e9s que pour le titre.",
+          "open_in_app": "Lorsqu'on touche une notification, lit le clip de l'\u00e9v\u00e9nement sur une page dans l'application Home Assistant. D\u00e9sactiv\u00e9 : le toucher ouvre le lien propre au clip, que l'application iPhone ouvre dans Safari."
+        }
+      },
+      "camera_notifications": {
+        "title": "Notifications de mouvement - choisir une cam\u00e9ra",
+        "data": {
+          "camera": "Cam\u00e9ra"
+        },
+        "data_description": {
+          "camera": "La cam\u00e9ra dont vous souhaitez modifier les r\u00e9glages de notification."
+        }
+      },
+      "camera_notify": {
+        "title": "Notifications de mouvement - {camera}",
+        "data": {
+          "events": "Envoyer une notification pour",
+          "targets": "Cibles pour cette cam\u00e9ra"
+        },
+        "data_description": {
+          "events": "D\u00e9sactiv\u00e9 : jamais. Tous : chaque \u00e9v\u00e9nement de mouvement et de personne. Personne uniquement : seulement lorsque la cam\u00e9ra signale une personne.",
+          "targets": "Laissez vide pour utiliser les cibles par d\u00e9faut."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Aucune cam\u00e9ra n'est encore charg\u00e9e. R\u00e9essayez une fois que l'int\u00e9gration a fini de d\u00e9marrer."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Automatique - LAN privil\u00e9gi\u00e9, relais en secours (recommand\u00e9)",
+        "lan_direct": "LAN uniquement (le plus rapide, m\u00eame r\u00e9seau seulement)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "D\u00e9sactiv\u00e9",
+        "all": "Tous les \u00e9v\u00e9nements de mouvement et de personne",
+        "person": "Personne uniquement"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Publication directe, audio synchronis\u00e9 pour HLS et les enregistrements (recommand\u00e9)",
+        "go2rtc": "Publication directe, HLS et enregistrements via go2rtc",
+        "no_hls_audio": "Publication directe, pas d'audio dans HLS et les enregistrements",
+        "ffmpeg": "ffmpeg par cam\u00e9ra standard",
+        "ffmpeg_no_hls_audio": "ffmpeg par cam\u00e9ra standard, pas d'audio dans HLS et les enregistrements"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "Aucun audio n'a pu \u00eatre d\u00e9cod\u00e9 depuis {media} - v\u00e9rifiez l'URL ou le chemin du m\u00e9dia."
+    },
+    "talk_session_failed": {
+      "message": "Impossible d'\u00e9tablir une session de conversation : la cam\u00e9ra n'a pas pu \u00eatre jointe, ou aucune session ne pouvait transporter la voix. Une vue en direct n'est pas n\u00e9cessaire."
+    },
+    "ptz_failed": {
+      "message": "La commande PTZ {direction} n'a pas \u00e9t\u00e9 envoy\u00e9e (la cam\u00e9ra doit \u00eatre en cours de diffusion - ouvrez d'abord la vue en direct)."
+    },
+    "sd_playback_not_running": {
+      "message": "Aucun enregistrement de la carte SD n'est en cours de r\u00e9cup\u00e9ration sur cette cam\u00e9ra."
+    },
+    "command_failed": {
+      "message": "\u00c9chec de AiDot {action} : {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} a \u00e9t\u00e9 rejet\u00e9 par l'appareil."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} est destin\u00e9 aux cam\u00e9ras sur batterie ; cette cam\u00e9ra est sur secteur et ne se met jamais en veille."
+    },
+    "wake_refused": {
+      "message": "Le cloud n'a pas accept\u00e9 la demande de r\u00e9veil (voir le journal)."
+    },
+    "sleep_refused": {
+      "message": "Le cloud n'a pas accept\u00e9 la demande de mise en veille (voir le journal)."
+    },
+    "camera_in_use": {
+      "message": "La cam\u00e9ra diffuse ou r\u00e9cup\u00e8re un enregistrement de la carte ; arr\u00eatez d'abord cela, ou laissez la vue se terminer."
+    },
+    "sd_recording_not_found": {
+      "message": "Aucun enregistrement de la carte ne correspond ; indiquez la cl\u00e9 de l'enregistrement issue du navigateur multim\u00e9dia ou son heure de d\u00e9but exacte, et actualisez d'abord la liste de la carte."
+    },
+    "sd_delete_no_session": {
+      "message": "La cam\u00e9ra doit \u00eatre en cours de diffusion pour supprimer un enregistrement de la carte ; ouvrez d'abord sa vue en direct."
+    },
+    "sd_delete_refused": {
+      "message": "La cam\u00e9ra a refus\u00e9 de supprimer l'enregistrement."
+    },
+    "sd_recording_ambiguous": {
+      "message": "Plusieurs enregistrements de la carte commencent \u00e0 cette seconde ; d\u00e9signez celui \u00e0 supprimer par sa cl\u00e9 issue du navigateur multim\u00e9dia."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Sensibilit\u00e9 au mouvement"
+      },
+      "speaker_volume": {
+        "name": "Volume du haut-parleur"
+      },
+      "light_brightness": {
+        "name": "Luminosit\u00e9 de l'\u00e9clairage"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "\u00c9clairage quand quelqu'un appara\u00eet"
+      },
+      "camera_audio": {
+        "name": "Audio de la cam\u00e9ra (dans le flux HA)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Microphone (confidentialit\u00e9 audio)"
+      },
+      "motion_detection": {
+        "name": "D\u00e9tection de mouvement"
+      },
+      "osd_timestamp": {
+        "name": "Filigrane"
+      },
+      "ptz_tracking": {
+        "name": "Suivi automatique"
+      },
+      "sound_all": {
+        "name": "Toutes les d\u00e9tections sonores"
+      },
+      "sound_baby_cry": {
+        "name": "D\u00e9tection de pleurs de b\u00e9b\u00e9"
+      },
+      "sound_dog_bark": {
+        "name": "D\u00e9tection d'aboiement de chien"
+      },
+      "sound_enable": {
+        "name": "D\u00e9tection sonore"
+      },
+      "sound_glass_break": {
+        "name": "D\u00e9tection de bris de verre"
+      },
+      "sound_smoke_t3": {
+        "name": "D\u00e9tection d'alarme incendie (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "D\u00e9tection d'alarme incendie (T4)"
+      },
+      "status_led": {
+        "name": "LED d'\u00e9tat"
+      },
+      "voice_prompts": {
+        "name": "Messages vocaux"
+      },
+      "detect_human": {
+        "name": "D\u00e9tection de personne"
+      },
+      "detect_vehicle": {
+        "name": "D\u00e9tection de v\u00e9hicule"
+      },
+      "detect_package": {
+        "name": "D\u00e9tection de colis"
+      },
+      "detect_pet": {
+        "name": "D\u00e9tection d'animal"
+      },
+      "auto_siren": {
+        "name": "Alarme automatique"
+      },
+      "auto_siren_on_motion": {
+        "name": "Alarme automatique sur mouvement"
+      },
+      "auto_siren_on_person": {
+        "name": "Alarme automatique sur personne"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Alarme automatique sur bris de verre"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Vision nocturne",
+        "state": {
+          "auto": "Automatique",
+          "on": "Activ\u00e9",
+          "off": "D\u00e9sactiv\u00e9"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Dur\u00e9e de maintien",
+        "state": {
+          "20": "20 secondes",
+          "30": "30 secondes",
+          "40": "40 secondes",
+          "50": "50 secondes"
+        }
+      },
+      "light_behavior": {
+        "name": "Comportement de l'\u00e9clairage",
+        "state": {
+          "constant": "Continu",
+          "flash": "Clignotant"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Mouvement",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Mouvement",
+              "person": "Personne",
+              "vehicle": "V\u00e9hicule",
+              "package": "Colis",
+              "pet": "Animal"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Batterie"
+      },
+      "sd_card_status": {
+        "name": "Carte SD",
+        "state": {
+          "present": "Carte ins\u00e9r\u00e9e",
+          "empty": "Emplacement vide"
+        }
+      },
+      "sd_card_total": {
+        "name": "Carte SD - total"
+      },
+      "sd_card_used": {
+        "name": "Carte SD - utilis\u00e9"
+      },
+      "wifi_rssi": {
+        "name": "Signal Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "R\u00e9seau Wi-Fi"
+      },
+      "last_connect_time": {
+        "name": "Dernier temps de connexion",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Derni\u00e8re cause de fin",
+            "state": {
+              "idle_release": "Aucun spectateur",
+              "stopped": "Arr\u00eat\u00e9",
+              "connection_lost": "Connexion perdue",
+              "camera_closed": "Ferm\u00e9 par la cam\u00e9ra",
+              "serve_ended": "Le consommateur du flux est parti",
+              "no_video": "Pas de vid\u00e9o",
+              "media_stalled": "M\u00e9dias arr\u00eat\u00e9s",
+              "ice_lost": "La cam\u00e9ra ne r\u00e9pond plus",
+              "no_media": "Aucun m\u00e9dia",
+              "wrong_codec": "Mauvais codec vid\u00e9o",
+              "busy": "Cam\u00e9ra occup\u00e9e",
+              "not_ready": "Cam\u00e9ra pas pr\u00eate",
+              "dtls_pin_mismatch": "Certificat non approuv\u00e9",
+              "open_failed": "Connexion impossible",
+              "error": "Erreur interne"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "\u00c9tat du flux",
+        "state": {
+          "idle": "Inactif",
+          "connecting": "Connexion",
+          "waking": "R\u00e9veil",
+          "streaming": "Diffusion",
+          "retrying": "Nouvelle tentative",
+          "dormant": "En sommeil",
+          "off": "\u00c9teint"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Derni\u00e8re cause de fin",
+            "state": {
+              "idle_release": "Aucun spectateur",
+              "stopped": "Arr\u00eat\u00e9",
+              "connection_lost": "Connexion perdue",
+              "camera_closed": "Ferm\u00e9 par la cam\u00e9ra",
+              "serve_ended": "Le consommateur du flux est parti",
+              "no_video": "Pas de vid\u00e9o",
+              "media_stalled": "M\u00e9dias arr\u00eat\u00e9s",
+              "ice_lost": "La cam\u00e9ra ne r\u00e9pond plus",
+              "no_media": "Aucun m\u00e9dia",
+              "wrong_codec": "Mauvais codec vid\u00e9o",
+              "busy": "Cam\u00e9ra occup\u00e9e",
+              "not_ready": "Cam\u00e9ra pas pr\u00eate",
+              "dtls_pin_mismatch": "Certificat non approuv\u00e9",
+              "open_failed": "Connexion impossible",
+              "error": "Erreur interne"
+            }
+          },
+          "failures": {
+            "name": "Tentatives \u00e9chou\u00e9es"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Occupation"
+      },
+      "person_detected": {
+        "name": "Personne d\u00e9tect\u00e9e"
+      },
+      "vehicle_detected": {
+        "name": "V\u00e9hicule d\u00e9tect\u00e9"
+      },
+      "package_detected": {
+        "name": "Colis d\u00e9tect\u00e9"
+      },
+      "pet_detected": {
+        "name": "Animal d\u00e9tect\u00e9"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "D\u00e9placer vers le haut"
+      },
+      "ptz_down": {
+        "name": "D\u00e9placer vers le bas"
+      },
+      "ptz_left": {
+        "name": "D\u00e9placer vers la gauche"
+      },
+      "ptz_right": {
+        "name": "D\u00e9placer vers la droite"
+      },
+      "ptz_stop": {
+        "name": "Arr\u00eater"
+      },
+      "ptz_zoom_in": {
+        "name": "Zoom avant"
+      },
+      "ptz_zoom_out": {
+        "name": "Zoom arri\u00e8re"
+      },
+      "reboot": {
+        "name": "Red\u00e9marrer"
+      },
+      "refresh_sd_recordings": {
+        "name": "Actualiser les enregistrements de l'appareil"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sir\u00e8ne"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Projecteur"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "Dernier \u00e9v\u00e9nement"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Micrologiciel"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "go2rtc rejette les mises \u00e0 jour de flux",
+      "description": "go2rtc a r\u00e9pondu \u00e0 la d\u00e9claration du flux `{stream}` par une erreur, et le flux \u00e9tait toujours pr\u00e9sent. Son fichier de configuration (go2rtc.yaml) contient tr\u00e8s probablement un flux list\u00e9 deux fois, ce qui am\u00e8ne go2rtc \u00e0 rejeter chaque d\u00e9claration de flux pour chaque cam\u00e9ra jusqu'\u00e0 ce que le doublon soit supprim\u00e9 \u00e0 la main. La vue en direct continue de fonctionner avec ce que go2rtc d\u00e9tient d\u00e9j\u00e0 ; une cam\u00e9ra ajout\u00e9e ou renomm\u00e9e depuis ne sera pas d\u00e9clar\u00e9e. Consultez la section de d\u00e9pannage du README. Ce message dispara\u00eet d\u00e8s qu'une d\u00e9claration de flux r\u00e9ussit."
+    },
+    "light_off_subnet": {
+      "title": "{name} est sur un autre r\u00e9seau",
+      "description": "L'\u00e9clairage `{name}` a \u00e9t\u00e9 signal\u00e9 pour la derni\u00e8re fois \u00e0 l'adresse `{address}`, qui se trouve en dehors de tous les r\u00e9seaux auxquels Home Assistant est connect\u00e9 ({networks}) ; sa connexion de contr\u00f4le local \u00e9choue donc. Si l'\u00e9clairage est sous tension, il est contr\u00f4l\u00e9 uniquement via le cloud. D\u00e9placez l'\u00e9clairage sur un r\u00e9seau que Home Assistant partage, ou donnez \u00e0 Home Assistant une route vers lui. Ce message dispara\u00eet d\u00e8s qu'une connexion locale r\u00e9ussit."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "Le go2rtc de Home Assistant lit le serveur dans lequel les cam\u00e9ras publient",
+      "description": "Le go2rtc de Home Assistant est configur\u00e9 avec `url: {url}`, et c'est le go2rtc dans lequel les cam\u00e9ras AiDot publieraient. Home Assistant ne peut pas lire un flux publi\u00e9 par une cam\u00e9ra ; y publier ferait donc \u00e9chouer la vue en direct de toutes les cam\u00e9ras, AiDot ou non. Tant que ce n'est pas corrig\u00e9, les cam\u00e9ras standard sont lues en mode tir\u00e9 (pas d'audio HLS synchronis\u00e9 ni de piste AAC) et les cam\u00e9ras SDES (les mod\u00e8les sur batterie et PTZ) ne sont pas diffus\u00e9es. Sur Home Assistant OS ou Container, supprimez la ligne `url:` de la section `go2rtc:` de configuration.yaml et red\u00e9marrez : Home Assistant utilise alors son go2rtc int\u00e9gr\u00e9 et les cam\u00e9ras publient dans l'autre serveur. Sur Home Assistant Core, ex\u00e9cutez un second go2rtc pour les cam\u00e9ras et faites pointer AIDOT_GO2RTC_API vers lui. Ce message dispara\u00eet d\u00e8s que les deux sont des serveurs diff\u00e9rents."
+    },
+    "sdes_no_go2rtc": {
+      "title": "Aucun go2rtc dans lequel publier les cam\u00e9ras SDES",
+      "description": "Aucun go2rtc n'a r\u00e9pondu : rien sur 127.0.0.1:1984 et pas de AIDOT_GO2RTC_API, et le go2rtc int\u00e9gr\u00e9 \u00e0 Home Assistant ne peut pas accepter un flux publi\u00e9. Les cam\u00e9ras SDES (les mod\u00e8les sur batterie et PTZ) n'ont pas d'autre chemin et ne sont pas diffus\u00e9es ; les cam\u00e9ras standard diffusent toujours, lues directement. Installez un module compl\u00e9mentaire go2rtc qui r\u00e9pond sur 127.0.0.1:1984 - l'int\u00e9gration WebRTC Camera ou le module compl\u00e9mentaire go2rtc - et red\u00e9marrez. Sur Home Assistant Core, faites plut\u00f4t pointer AIDOT_GO2RTC_API vers un go2rtc que vous ex\u00e9cutez, et red\u00e9marrez. Ce message dispara\u00eet d\u00e8s qu'un go2rtc r\u00e9pond."
+    },
+    "weak_wifi": {
+      "title": "{name} a un signal Wi-Fi faible",
+      "description": "La cam\u00e9ra `{name}` signale un signal Wi-Fi de {rssi} dBm. Il est rest\u00e9 sous {threshold} dBm pendant au moins {minutes} minutes, et {stalls} de ses vues en direct des {hours} derni\u00e8res heures ont mis {slow} secondes ou plus \u00e0 d\u00e9marrer, ou n'ont pas d\u00e9marr\u00e9. Avec un signal aussi faible, la cam\u00e9ra r\u00e9pond souvent puis n'envoie aucune vid\u00e9o, de sorte que la carte reste vide jusqu'\u00e0 ce qu'une nouvelle tentative aboutisse. Rapprochez la cam\u00e9ra de son point d'acc\u00e8s Wi-Fi, d\u00e9placez ou ajoutez un point d'acc\u00e8s plus pr\u00e8s de la cam\u00e9ra, ou d\u00e9gagez ce qui se trouve entre les deux. Cet avis dispara\u00eet d\u00e8s que le signal atteint {clear} dBm ou mieux, ou que la vue en direct d\u00e9marre de nouveau rapidement."
+    },
+    "dtls_pin_mismatch": {
+      "title": "{name} a pr\u00e9sent\u00e9 un certificat qu'elle n'utilisait pas avant",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Faire confiance au nouveau certificat de {name} ?",
+            "description": "La vue en direct de `{name}` est refus\u00e9e, car la cam\u00e9ra a pr\u00e9sent\u00e9 un certificat de s\u00e9curit\u00e9 (DTLS) diff\u00e9rent de celui qu'elle utilisait avant. C'est attendu apr\u00e8s une r\u00e9initialisation d'usine, une mise \u00e0 jour du firmware ou un remplacement de la cam\u00e9ra. Cela peut aussi signifier qu'un autre appareil de votre r\u00e9seau r\u00e9pond \u00e0 la place de la cam\u00e9ra. Si vous avez r\u00e9initialis\u00e9, mis \u00e0 jour ou remplac\u00e9 la cam\u00e9ra, faites confiance \u00e0 son nouveau certificat : sa prochaine connexion enregistre le certificat, qui est de nouveau \u00e9pingl\u00e9 apr\u00e8s quelques connexions. Si rien de cela ne s'applique, v\u00e9rifiez d'abord votre r\u00e9seau."
+          }
+        },
+        "abort": {
+          "camera_not_loaded": "La cam\u00e9ra n'est pas charg\u00e9e pour le moment. R\u00e9essayez une fois l'int\u00e9gration AiDot d\u00e9marr\u00e9e."
+        }
+      }
+    }
+  }
+}

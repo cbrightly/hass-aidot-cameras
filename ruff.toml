@@ -1,0 +1,24 @@
+target-version = "py312"
+line-length = 88
+
+[lint]
+# High-signal rules only; opinionated style (quotes, trailing commas, missing
+# annotations/docstrings, magic values) is intentionally left to the formatter.
+select = ["F", "E4", "E7", "E9", "W", "B", "ASYNC", "RUF", "UP", "SIM", "PIE", "RET", "PERF"]
+ignore = [
+    "E501",                                  # line length: formatter's job
+    "E702",                                  # multiple-statements (semicolon): cosmetic
+    "UP035", "UP006", "UP007", "UP045", "UP037", "UP031",  # typing/format style
+    "SIM102", "SIM103", "SIM105", "SIM108", "SIM117",  # collapsible/ternary/suppress/nested
+    "ASYNC109", "ASYNC240",                  # timeout-param design; os.path.join is non-blocking
+    "RET504", "RET505", "RET506",            # return-style: stylistic
+    "PERF203", "PERF401",                    # try/except in loop, manual comprehension: stylistic
+    "PIE810",                                # multiple startswith/endswith: stylistic
+    "RUF001", "RUF003", "RUF059",            # ambiguous-unicode, unused-unpacked: cosmetic
+    "B904",                                  # raise-without-from: traceback-chaining style
+    "B008",
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["B", "RUF", "SIM", "PERF", "ASYNC", "F811", "PIE", "E731", "E702"]
+"__init__.py" = ["F401"]

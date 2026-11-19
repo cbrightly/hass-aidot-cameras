@@ -1,0 +1,119 @@
+{
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "speaker_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "default": "mdi:motion-sensor"
+      },
+      "status_led": {
+        "default": "mdi:led-on"
+      },
+      "microphone": {
+        "default": "mdi:microphone"
+      },
+      "floodlight": {
+        "default": "mdi:light-flood-down"
+      },
+      "ptz_tracking": {
+        "default": "mdi:radar"
+      },
+      "siren": {
+        "default": "mdi:alarm-light"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "default": "mdi:weather-night"
+      }
+    },
+    "sensor": {
+      "sd_card_status": {
+        "default": "mdi:micro-sd"
+      },
+      "stream_status": {
+        "default": "mdi:video-outline",
+        "state": {
+          "idle": "mdi:video-outline",
+          "connecting": "mdi:video-wireless-outline",
+          "waking": "mdi:sleep-off",
+          "streaming": "mdi:video",
+          "retrying": "mdi:refresh",
+          "dormant": "mdi:sleep",
+          "off": "mdi:video-off"
+        }
+      },
+      "last_connect_time": {
+        "default": "mdi:timer-outline"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "default": "mdi:arrow-up-circle-outline"
+      },
+      "ptz_down": {
+        "default": "mdi:arrow-down-circle-outline"
+      },
+      "ptz_left": {
+        "default": "mdi:arrow-left-circle-outline"
+      },
+      "ptz_right": {
+        "default": "mdi:arrow-right-circle-outline"
+      },
+      "ptz_stop": {
+        "default": "mdi:stop-circle-outline"
+      },
+      "ptz_zoom_in": {
+        "default": "mdi:magnify-plus-outline"
+      },
+      "ptz_zoom_out": {
+        "default": "mdi:magnify-minus-outline"
+      }
+    },
+    "binary_sensor": {
+      "person_detected": {
+        "default": "mdi:account-outline",
+        "state": {
+          "on": "mdi:account"
+        }
+      },
+      "vehicle_detected": {
+        "default": "mdi:car-outline",
+        "state": {
+          "on": "mdi:car"
+        }
+      },
+      "package_detected": {
+        "default": "mdi:package-variant",
+        "state": {
+          "on": "mdi:package-variant-closed"
+        }
+      },
+      "pet_detected": {
+        "default": "mdi:paw-outline",
+        "state": {
+          "on": "mdi:paw"
+        }
+      }
+    },
+    "image": {
+      "last_event": {
+        "default": "mdi:image-outline"
+      }
+    },
+    "update": {
+      "firmware": {
+        "default": "mdi:package",
+        "state": {
+          "on": "mdi:package-up"
+        }
+      }
+    }
+  }
+}

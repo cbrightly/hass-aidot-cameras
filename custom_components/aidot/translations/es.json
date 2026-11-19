@@ -1,0 +1,510 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Introduce las credenciales de tu cuenta de AiDot.",
+        "data": {
+          "country_code": "Pa\u00eds",
+          "username": "Correo electr\u00f3nico",
+          "password": "Contrase\u00f1a"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Vuelve a introducir tu contrase\u00f1a para {username}.",
+        "data": {
+          "password": "Contrase\u00f1a"
+        }
+      },
+      "reconfigure": {
+        "description": "Actualiza las credenciales de {username}.",
+        "data": {
+          "country_code": "Pa\u00eds",
+          "username": "Correo electr\u00f3nico",
+          "password": "Contrase\u00f1a"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Correo electr\u00f3nico o contrase\u00f1a no v\u00e1lidos.",
+      "cannot_connect": "No se pudo conectar con los servidores de AiDot."
+    },
+    "abort": {
+      "already_configured": "La cuenta ya est\u00e1 configurada.",
+      "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso.",
+      "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente.",
+      "reconfigure_successful": "Se volvi\u00f3 a configurar correctamente."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de AiDot",
+        "menu_options": {
+          "streaming": "Vista en directo y conexi\u00f3n",
+          "audio": "Audio y grabaciones",
+          "notifications": "Notificaciones de movimiento - destinos y texto",
+          "camera_notifications": "Notificaciones de movimiento - por c\u00e1mara"
+        }
+      },
+      "streaming": {
+        "title": "Vista en directo y conexi\u00f3n",
+        "data": {
+          "serve_port_base": "Puerto base de los streams de c\u00e1mara",
+          "connection_mode": "Modo de conexi\u00f3n",
+          "sdes_fast_liveplay": "Conexi\u00f3n r\u00e1pida SDES",
+          "mains_idle_s": "Mantener en caliente las c\u00e1maras con alimentaci\u00f3n de red (segundos)",
+          "enable_local_control": "Control local de la c\u00e1mara",
+          "startup_prewarm": "Precalentar las sesiones de c\u00e1mara al arrancar",
+          "motion_prewarm": "Preconectar al detectar movimiento",
+          "sd_list_on_view": "Listar la tarjeta SD cuando se ve una c\u00e1mara con bater\u00eda"
+        },
+        "data_description": {
+          "serve_port_base": "Puerto local base para el servicio local, que usan las c\u00e1maras est\u00e1ndar (DTLS) cuando no publican en go2rtc; cada c\u00e1mara usa base..base+399. C\u00e1mbialo solo si entra en conflicto con otro servicio.",
+          "connection_mode": "C\u00f3mo se conectan las c\u00e1maras. Autom\u00e1tico (recomendado) ofrece todas las rutas y prefiere la LAN, manteniendo el rel\u00e9 de la nube como alternativa: las c\u00e1maras de la misma LAN se conectan directamente y solo una c\u00e1mara sin ruta directa pasa por el rel\u00e9. Solo LAN omite el rel\u00e9 para un inicio m\u00e1s r\u00e1pido (~1 s frente a ~3-4 s), pero una c\u00e1mara que no pueda alcanzar Home Assistant directamente no se conectar\u00e1 (las c\u00e1maras con bater\u00eda conservan el rel\u00e9 en cualquier caso: es su \u00fanico camino de vuelta tras un despertar desde la nube). Cada c\u00e1mara indica la ruta en uso en Diagn\u00f3sticos como media_path.",
+          "sdes_fast_liveplay": "Igual que la aplicaci\u00f3n oficial: omite la espera de livePlayResp y pasa directamente a la negociaci\u00f3n de v\u00eddeo, de modo que las c\u00e1maras SDES (con bater\u00eda) arrancan ~4,5 s antes. ACTIVADO por defecto. La c\u00e1mara PTZ queda excluida autom\u00e1ticamente (su negociaci\u00f3n necesita la ruta m\u00e1s lenta). Si alguna vez ves que la vista en directo de una c\u00e1mara concreta cae a una instant\u00e1nea, desactiva esta opci\u00f3n.",
+          "mains_idle_s": "Cu\u00e1nto tiempo se mantiene en caliente la sesi\u00f3n en directo de una c\u00e1mara con alimentaci\u00f3n de red despu\u00e9s del \u00faltimo espectador, para que volver a abrirla sea instant\u00e1neo en lugar de pagar la negociaci\u00f3n completa del arranque en fr\u00edo. Por defecto 0 = no liberar nunca (siempre en caliente, vistas instant\u00e1neas). Pon una ventana positiva (p. ej. 300 = 5 min) para que las c\u00e1maras que nadie mira pasen a reposo; una c\u00e1mara en reposo se reconecta al verla en unos 2,4-3,3 s. Cada c\u00e1mara en caliente sigue descifrando, lo que consume CPU del host. Las c\u00e1maras con bater\u00eda ignoran este ajuste: solo transmiten mientras alguien las est\u00e1 viendo (actualizar la lista de la tarjeta SD de una c\u00e1mara con bater\u00eda tambi\u00e9n la despierta brevemente) y se detienen alrededor de medio minuto despu\u00e9s de que se vaya el \u00faltimo espectador (m\u00e1s los 30 s propios de Home Assistant para el di\u00e1logo HLS).",
+          "enable_local_control": "Env\u00eda los ajustes de la c\u00e1mara (LED, detecci\u00f3n de movimiento, visi\u00f3n nocturna, sensibilidad, volumen, seguimiento PTZ) por la LAN en lugar de por la nube, en las c\u00e1maras con alimentaci\u00f3n de red compatibles. Es m\u00e1s r\u00e1pido y funciona durante las ca\u00eddas de la nube; vuelve a la nube autom\u00e1ticamente. No afecta al v\u00eddeo. Las c\u00e1maras con bater\u00eda se omiten.",
+          "startup_prewarm": "Abre una sesi\u00f3n en cada c\u00e1mara con alimentaci\u00f3n de red en segundo plano al arrancar (de forma escalonada), para que la primera vista en directo tras un reinicio sea instant\u00e1nea en lugar de pagar el arranque en fr\u00edo (unos 2,4-3,3 s en una c\u00e1mara con alimentaci\u00f3n de red). Activado por defecto; desact\u00edvalo para ahorrar CPU del host cuando las vistas son poco frecuentes. Las c\u00e1maras con bater\u00eda quedan excluidas.",
+          "motion_prewarm": "Abre la sesi\u00f3n de una c\u00e1mara con alimentaci\u00f3n de red cuando informa de movimiento, para que una vista en directo abierta poco despu\u00e9s arranque en caliente en lugar de pagar el arranque en fr\u00edo (unos 3 s); despu\u00e9s la sesi\u00f3n sigue abierta mientras el ajuste de mantener en caliente la conserve. Desactivado por defecto: una notificaci\u00f3n de movimiento abre el clip de la nube, no una vista en directo, as\u00ed que la mayor\u00eda de estas sesiones no transmiten a nadie. Solo c\u00e1maras con alimentaci\u00f3n de red; las c\u00e1maras con bater\u00eda nunca se preconectan.",
+          "sd_list_on_view": "Solo para c\u00e1maras con bater\u00eda. Mientras hay una vista en directo (o un camera.record) de una c\u00e1mara con bater\u00eda, tambi\u00e9n se pregunta a la c\u00e1mara qu\u00e9 contiene su tarjeta SD, por la sesi\u00f3n que esa vista ya tiene abierta, de modo que la carpeta On device del navegador de medios se rellena sin pulsar Actualizar grabaciones del dispositivo. Nunca despierta la c\u00e1mara ni abre una sesi\u00f3n propia, y no mantiene la c\u00e1mara despierta despu\u00e9s de cerrar la vista; una vista de menos de unos segundos no obtiene listado. Como m\u00e1ximo un listado por c\u00e1mara cada 5 minutos, y ninguno mientras la lista tenga menos de 15 minutos. Desactivado por defecto: el listado comparte el enlace Wi-Fi de la c\u00e1mara con la imagen en directo. Se aplica sin recargar."
+        }
+      },
+      "audio": {
+        "title": "Audio y grabaciones",
+        "data": {
+          "sdes_audio_gain_db": "Ganancia de audio de la c\u00e1mara (dB)",
+          "publish_mode": "Publicaci\u00f3n y audio en HLS y grabaciones"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Ajuste de volumen del audio de la c\u00e1mara, aplicado despu\u00e9s del normalizador de nivel que la biblioteca ejecuta en cada c\u00e1mara. 0 dB (el valor por defecto) sirve una c\u00e1mara con bater\u00eda o PTZ con el mismo volumen que una M3 Pro. S\u00fabelo si una c\u00e1mara suena demasiado baja y b\u00e1jalo si satura. Se aplica a las c\u00e1maras SDES (con bater\u00eda y PTZ). Las instalaciones que guardaron el antiguo valor por defecto de -8 dB lo conservan; pon 0 para igualarlas a las dem\u00e1s.",
+          "publish_mode": "C\u00f3mo llega cada c\u00e1mara a go2rtc y c\u00f3mo obtienen su sonido el di\u00e1logo HLS de Home Assistant (las tarjetas Imagen) y las grabaciones de camera.record. Las vistas WebRTC llevan el audio propio de la c\u00e1mara en todos los modos. La publicaci\u00f3n directa env\u00eda el v\u00eddeo y el audio de cada c\u00e1mara directamente a go2rtc sin ning\u00fan proceso ffmpeg intermedio: las c\u00e1maras SDES siempre publican, y las c\u00e1maras est\u00e1ndar (DTLS) publican en un go2rtc en el puerto 1984 (o AIDOT_GO2RTC_API) cuando responde; si no, conservan su puerto de servicio local. No se publica nada en el go2rtc incluido en Home Assistant. Sincronizado (el valor por defecto) hace adem\u00e1s que el di\u00e1logo HLS y las grabaciones lean el stream de cada c\u00e1mara con alimentaci\u00f3n de red directamente de esta integraci\u00f3n, con sonido e imagen en un mismo reloj (las c\u00e1maras con bater\u00eda siguen leyendo el de go2rtc); a trav\u00e9s de go2rtc, una grabaci\u00f3n que empieza mientras la c\u00e1mara ya est\u00e1 transmitiendo puede tener el sonido hasta unos 0,75 s por detr\u00e1s de la imagen. La copia AAC del audio de la c\u00e1mara que da sonido a HLS y a las grabaciones cuesta alrededor del 2-3 % de un n\u00facleo de CPU por c\u00e1mara en transmisi\u00f3n; los modos sin audio se lo ahorran. Los modos ffmpeg vuelven a un proceso ffmpeg por c\u00e1mara est\u00e1ndar; las c\u00e1maras SDES siguen publicando directamente."
+        }
+      },
+      "notifications": {
+        "title": "Notificaciones de movimiento",
+        "data": {
+          "targets": "Destinos de notificaci\u00f3n por defecto",
+          "cooldown_s": "Tiempo de espera por c\u00e1mara (segundos)",
+          "title": "T\u00edtulo de la notificaci\u00f3n",
+          "message": "Mensaje de la notificaci\u00f3n",
+          "open_in_app": "Abrir el clip dentro de la aplicaci\u00f3n de Home Assistant (experimental)"
+        },
+        "data_description": {
+          "targets": "Los servicios de notificaci\u00f3n a los que enviar (por ejemplo, un tel\u00e9fono con la aplicaci\u00f3n complementaria). Los usa toda c\u00e1mara que no defina sus propios destinos. Puedes escribir un nombre de servicio que no est\u00e9 en la lista.",
+          "cooldown_s": "Tras una notificaci\u00f3n de una c\u00e1mara, no se env\u00edan m\u00e1s movimientos de esa c\u00e1mara durante este tiempo. Una detecci\u00f3n de persona s\u00ed atraviesa un tiempo de espera iniciado por un simple movimiento. 0 desactiva el tiempo de espera.",
+          "title": "Marcadores: camera, event (motion/person), event_title (Motion/Person), time, device_id. Escribe cada uno entre llaves en el t\u00edtulo o en el mensaje.",
+          "message": "Los mismos marcadores que en el t\u00edtulo.",
+          "open_in_app": "Al tocar una notificaci\u00f3n, reproduce el clip del evento en una p\u00e1gina dentro de la aplicaci\u00f3n de Home Assistant. Desactivado: el toque abre el enlace propio del clip, que la aplicaci\u00f3n de iPhone abre en Safari."
+        }
+      },
+      "camera_notifications": {
+        "title": "Notificaciones de movimiento - elige una c\u00e1mara",
+        "data": {
+          "camera": "C\u00e1mara"
+        },
+        "data_description": {
+          "camera": "La c\u00e1mara cuyos ajustes de notificaci\u00f3n quieres cambiar."
+        }
+      },
+      "camera_notify": {
+        "title": "Notificaciones de movimiento - {camera}",
+        "data": {
+          "events": "Enviar una notificaci\u00f3n para",
+          "targets": "Destinos para esta c\u00e1mara"
+        },
+        "data_description": {
+          "events": "Desactivado: nunca. Todos: cada evento de movimiento y de persona. Solo persona: solo cuando la c\u00e1mara informa de una persona.",
+          "targets": "D\u00e9jalo vac\u00edo para usar los destinos por defecto."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Todav\u00eda no hay c\u00e1maras cargadas. Int\u00e9ntalo de nuevo cuando la integraci\u00f3n haya terminado de iniciarse."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Autom\u00e1tico - LAN preferida, rel\u00e9 como alternativa (recomendado)",
+        "lan_direct": "Solo LAN (lo m\u00e1s r\u00e1pido, solo en la misma red)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Desactivado",
+        "all": "Todos los eventos de movimiento y de persona",
+        "person": "Solo persona"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Publicaci\u00f3n directa, audio sincronizado para HLS y grabaciones (recomendado)",
+        "go2rtc": "Publicaci\u00f3n directa, HLS y grabaciones a trav\u00e9s de go2rtc",
+        "no_hls_audio": "Publicaci\u00f3n directa, sin audio en HLS y grabaciones",
+        "ffmpeg": "ffmpeg por c\u00e1mara est\u00e1ndar",
+        "ffmpeg_no_hls_audio": "ffmpeg por c\u00e1mara est\u00e1ndar, sin audio en HLS y grabaciones"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "No se pudo decodificar audio de {media}: comprueba la URL o la ruta del medio."
+    },
+    "talk_session_failed": {
+      "message": "No se pudo establecer una sesi\u00f3n de voz: no se pudo alcanzar la c\u00e1mara o ninguna sesi\u00f3n pod\u00eda transportar la voz. No hace falta una vista en directo."
+    },
+    "ptz_failed": {
+      "message": "El comando PTZ {direction} no se envi\u00f3 (la c\u00e1mara debe estar transmitiendo: abre primero la vista en directo)."
+    },
+    "sd_playback_not_running": {
+      "message": "No se est\u00e1 obteniendo ninguna grabaci\u00f3n de la tarjeta SD en esta c\u00e1mara."
+    },
+    "command_failed": {
+      "message": "AiDot {action} fall\u00f3: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} fue rechazado por el dispositivo."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} es para c\u00e1maras con bater\u00eda; esta c\u00e1mara tiene alimentaci\u00f3n de red y nunca duerme."
+    },
+    "wake_refused": {
+      "message": "La nube no acept\u00f3 la solicitud de despertar (consulta el registro)."
+    },
+    "sleep_refused": {
+      "message": "La nube no acept\u00f3 la solicitud de reposo (consulta el registro)."
+    },
+    "camera_in_use": {
+      "message": "La c\u00e1mara est\u00e1 transmitiendo u obteniendo una grabaci\u00f3n de la tarjeta; det\u00e9n eso primero o deja que la vista termine."
+    },
+    "sd_recording_not_found": {
+      "message": "Ninguna grabaci\u00f3n de la tarjeta coincide; indica la clave de la grabaci\u00f3n del navegador de medios o su hora de inicio exacta, y actualiza primero la lista de la tarjeta."
+    },
+    "sd_delete_no_session": {
+      "message": "La c\u00e1mara debe estar transmitiendo para borrar una grabaci\u00f3n de la tarjeta; abre primero su vista en directo."
+    },
+    "sd_delete_refused": {
+      "message": "La c\u00e1mara se neg\u00f3 a borrar la grabaci\u00f3n."
+    },
+    "sd_recording_ambiguous": {
+      "message": "M\u00e1s de una grabaci\u00f3n de la tarjeta empieza en ese segundo; indica cu\u00e1l borrar mediante su clave del navegador de medios."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Sensibilidad de movimiento"
+      },
+      "speaker_volume": {
+        "name": "Volumen del altavoz"
+      },
+      "light_brightness": {
+        "name": "Brillo de la luz"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "Luz cuando aparece alguien"
+      },
+      "camera_audio": {
+        "name": "Audio de la c\u00e1mara (en el stream de HA)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Micr\u00f3fono (privacidad de audio)"
+      },
+      "motion_detection": {
+        "name": "Detecci\u00f3n de movimiento"
+      },
+      "osd_timestamp": {
+        "name": "Marca de agua"
+      },
+      "ptz_tracking": {
+        "name": "Seguimiento autom\u00e1tico"
+      },
+      "sound_all": {
+        "name": "Toda la detecci\u00f3n de sonido"
+      },
+      "sound_baby_cry": {
+        "name": "Detecci\u00f3n de llanto de beb\u00e9"
+      },
+      "sound_dog_bark": {
+        "name": "Detecci\u00f3n de ladrido de perro"
+      },
+      "sound_enable": {
+        "name": "Detecci\u00f3n de sonido"
+      },
+      "sound_glass_break": {
+        "name": "Detecci\u00f3n de rotura de cristal"
+      },
+      "sound_smoke_t3": {
+        "name": "Detecci\u00f3n de alarma de humo (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "Detecci\u00f3n de alarma de humo (T4)"
+      },
+      "status_led": {
+        "name": "LED de estado"
+      },
+      "voice_prompts": {
+        "name": "Avisos de voz"
+      },
+      "detect_human": {
+        "name": "Detecci\u00f3n de personas"
+      },
+      "detect_vehicle": {
+        "name": "Detecci\u00f3n de veh\u00edculos"
+      },
+      "detect_package": {
+        "name": "Detecci\u00f3n de paquetes"
+      },
+      "detect_pet": {
+        "name": "Detecci\u00f3n de mascotas"
+      },
+      "auto_siren": {
+        "name": "Alarma autom\u00e1tica"
+      },
+      "auto_siren_on_motion": {
+        "name": "Alarma autom\u00e1tica por movimiento"
+      },
+      "auto_siren_on_person": {
+        "name": "Alarma autom\u00e1tica por persona"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Alarma autom\u00e1tica por rotura de cristal"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Visi\u00f3n nocturna",
+        "state": {
+          "auto": "Autom\u00e1tico",
+          "on": "Encendido",
+          "off": "Apagado"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Duraci\u00f3n de permanencia",
+        "state": {
+          "20": "20 segundos",
+          "30": "30 segundos",
+          "40": "40 segundos",
+          "50": "50 segundos"
+        }
+      },
+      "light_behavior": {
+        "name": "Comportamiento de la luz",
+        "state": {
+          "constant": "Constante",
+          "flash": "Destello"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Movimiento",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Movimiento",
+              "person": "Persona",
+              "vehicle": "Veh\u00edculo",
+              "package": "Paquete",
+              "pet": "Mascota"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Bater\u00eda"
+      },
+      "sd_card_status": {
+        "name": "Tarjeta SD",
+        "state": {
+          "present": "Tarjeta en la ranura",
+          "empty": "Ranura vac\u00eda"
+        }
+      },
+      "sd_card_total": {
+        "name": "Tarjeta SD: total"
+      },
+      "sd_card_used": {
+        "name": "Tarjeta SD: en uso"
+      },
+      "wifi_rssi": {
+        "name": "Se\u00f1al Wi-Fi"
+      },
+      "wifi_ssid": {
+        "name": "Red Wi-Fi"
+      },
+      "last_connect_time": {
+        "name": "\u00daltimo tiempo de conexi\u00f3n",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "\u00daltimo motivo de fin",
+            "state": {
+              "idle_release": "Sin espectadores",
+              "stopped": "Detenido",
+              "connection_lost": "Conexi\u00f3n perdida",
+              "camera_closed": "Cerrado por la c\u00e1mara",
+              "serve_ended": "El consumidor del flujo se fue",
+              "no_video": "Sin v\u00eddeo",
+              "media_stalled": "Medios detenidos",
+              "ice_lost": "La c\u00e1mara dej\u00f3 de responder",
+              "no_media": "Sin medios",
+              "wrong_codec": "C\u00f3dec de v\u00eddeo incorrecto",
+              "busy": "C\u00e1mara ocupada",
+              "not_ready": "C\u00e1mara no preparada",
+              "dtls_pin_mismatch": "Certificado no fiable",
+              "open_failed": "No se pudo conectar",
+              "error": "Error interno"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "Estado de la transmisi\u00f3n",
+        "state": {
+          "idle": "Inactivo",
+          "connecting": "Conectando",
+          "waking": "Despertando",
+          "streaming": "Transmitiendo",
+          "retrying": "Reintentando",
+          "dormant": "En reposo",
+          "off": "Apagado"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "\u00daltimo motivo de fin",
+            "state": {
+              "idle_release": "Sin espectadores",
+              "stopped": "Detenido",
+              "connection_lost": "Conexi\u00f3n perdida",
+              "camera_closed": "Cerrado por la c\u00e1mara",
+              "serve_ended": "El consumidor del flujo se fue",
+              "no_video": "Sin v\u00eddeo",
+              "media_stalled": "Medios detenidos",
+              "ice_lost": "La c\u00e1mara dej\u00f3 de responder",
+              "no_media": "Sin medios",
+              "wrong_codec": "C\u00f3dec de v\u00eddeo incorrecto",
+              "busy": "C\u00e1mara ocupada",
+              "not_ready": "C\u00e1mara no preparada",
+              "dtls_pin_mismatch": "Certificado no fiable",
+              "open_failed": "No se pudo conectar",
+              "error": "Error interno"
+            }
+          },
+          "failures": {
+            "name": "Intentos fallidos"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Ocupaci\u00f3n"
+      },
+      "person_detected": {
+        "name": "Persona detectada"
+      },
+      "vehicle_detected": {
+        "name": "Veh\u00edculo detectado"
+      },
+      "package_detected": {
+        "name": "Paquete detectado"
+      },
+      "pet_detected": {
+        "name": "Mascota detectada"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Mover arriba"
+      },
+      "ptz_down": {
+        "name": "Mover abajo"
+      },
+      "ptz_left": {
+        "name": "Mover a la izquierda"
+      },
+      "ptz_right": {
+        "name": "Mover a la derecha"
+      },
+      "ptz_stop": {
+        "name": "Detener"
+      },
+      "ptz_zoom_in": {
+        "name": "Acercar"
+      },
+      "ptz_zoom_out": {
+        "name": "Alejar"
+      },
+      "reboot": {
+        "name": "Reiniciar"
+      },
+      "refresh_sd_recordings": {
+        "name": "Actualizar grabaciones del dispositivo"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sirena"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Foco"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "\u00daltimo evento"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "go2rtc rechaza las actualizaciones de streams",
+      "description": "go2rtc respondi\u00f3 al registro del stream `{stream}` con un error, y el stream segu\u00eda ah\u00ed. Lo m\u00e1s probable es que su archivo de configuraci\u00f3n (go2rtc.yaml) contenga un stream listado dos veces, lo que hace que go2rtc rechace todos los registros de todas las c\u00e1maras hasta que el duplicado se elimine a mano. La vista en directo sigue funcionando con lo que go2rtc ya tiene; una c\u00e1mara a\u00f1adida o renombrada desde entonces no se registrar\u00e1. Consulta la secci\u00f3n de soluci\u00f3n de problemas del README. Este mensaje desaparece cuando un registro se completa correctamente."
+    },
+    "light_off_subnet": {
+      "title": "{name} est\u00e1 en otra red",
+      "description": "La luz `{name}` se detect\u00f3 por \u00faltima vez en `{address}`, que est\u00e1 fuera de todas las redes en las que est\u00e1 Home Assistant ({networks}), por lo que falla su inicio de sesi\u00f3n de control local. Si la luz tiene alimentaci\u00f3n, solo se controla a trav\u00e9s de la nube. Mueve la luz a una red que Home Assistant comparta, o da a Home Assistant una ruta hasta ella. Esto desaparece cuando un inicio de sesi\u00f3n local se completa correctamente."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "El go2rtc de Home Assistant lee el servidor en el que publican las c\u00e1maras",
+      "description": "El go2rtc de Home Assistant est\u00e1 configurado con `url: {url}`, y ese es el go2rtc en el que publicar\u00edan las c\u00e1maras AiDot. Home Assistant no puede leer un stream que publica una c\u00e1mara, as\u00ed que publicar ah\u00ed har\u00eda fallar la vista en directo de todas las c\u00e1maras, sean AiDot o no. Hasta que se corrija, las c\u00e1maras est\u00e1ndar se leen por extracci\u00f3n (sin audio HLS sincronizado ni pista AAC) y las c\u00e1maras SDES (los modelos con bater\u00eda y PTZ) no se transmiten. En Home Assistant OS o Container, elimina la l\u00ednea `url:` de la secci\u00f3n `go2rtc:` de configuration.yaml y reinicia: Home Assistant usar\u00e1 entonces su go2rtc integrado y las c\u00e1maras publicar\u00e1n en el otro servidor. En Home Assistant Core, ejecuta un segundo go2rtc para las c\u00e1maras y apunta AIDOT_GO2RTC_API a \u00e9l. Esto desaparece cuando los dos son servidores distintos."
+    },
+    "sdes_no_go2rtc": {
+      "title": "No hay ning\u00fan go2rtc en el que publicar las c\u00e1maras SDES",
+      "description": "Ning\u00fan go2rtc respondi\u00f3: nada en 127.0.0.1:1984 y ning\u00fan AIDOT_GO2RTC_API, y el go2rtc integrado de Home Assistant no puede aceptar un stream publicado. Las c\u00e1maras SDES (los modelos con bater\u00eda y PTZ) no tienen otra ruta y no se transmiten; las c\u00e1maras est\u00e1ndar siguen transmitiendo, le\u00eddas directamente. Instala un complemento go2rtc que responda en 127.0.0.1:1984 - la integraci\u00f3n WebRTC Camera o el complemento go2rtc - y reinicia. En Home Assistant Core, apunta en su lugar AIDOT_GO2RTC_API a un go2rtc que ejecutes t\u00fa, y reinicia. Esto desaparece cuando un go2rtc responde."
+    },
+    "weak_wifi": {
+      "title": "{name} tiene una se\u00f1al Wi-Fi d\u00e9bil",
+      "description": "La c\u00e1mara `{name}` informa de una se\u00f1al Wi-Fi de {rssi} dBm. Ha estado por debajo de {threshold} dBm durante al menos {minutes} minutos, y {stalls} de sus vistas en directo de las \u00faltimas {hours} horas tardaron {slow} segundos o m\u00e1s en empezar, o no empezaron. Con una se\u00f1al tan d\u00e9bil la c\u00e1mara suele responder y luego no env\u00eda v\u00eddeo, por lo que la tarjeta queda en blanco hasta que un reintento lo consigue. Acerca la c\u00e1mara a su punto de acceso Wi-Fi, mueve o a\u00f1ade un punto de acceso m\u00e1s cerca de la c\u00e1mara, o despeja lo que haya entre ambos. Este aviso desaparece cuando la se\u00f1al marca {clear} dBm o mejor, o cuando la vista en directo vuelve a empezar con rapidez."
+    },
+    "dtls_pin_mismatch": {
+      "title": "{name} present\u00f3 un certificado que no usaba antes",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "\u00bfConfiar en el nuevo certificado de {name}?",
+            "description": "La vista en directo de `{name}` se rechaza porque la c\u00e1mara present\u00f3 un certificado de seguridad (DTLS) distinto del que usaba antes. Es lo esperado tras un restablecimiento de f\u00e1brica, una actualizaci\u00f3n de firmware o la sustituci\u00f3n de la c\u00e1mara. Tambi\u00e9n puede significar que otro dispositivo de tu red responde en lugar de la c\u00e1mara. Si restableciste, actualizaste o sustituiste la c\u00e1mara, conf\u00eda en su nuevo certificado: su pr\u00f3xima conexi\u00f3n registra el certificado, y tras unas pocas conexiones vuelve a quedar fijado. Si no hiciste nada de eso, revisa primero tu red."
+          }
+        },
+        "abort": {
+          "camera_not_loaded": "La c\u00e1mara no est\u00e1 cargada ahora mismo. Vuelve a intentarlo cuando la integraci\u00f3n AiDot se haya iniciado."
+        }
+      }
+    }
+  }
+}
