@@ -1,0 +1,179 @@
+blueprint:
+  name: "AiDot: wake a battery camera, then record"
+  description: >-
+    Record from an AiDot **battery** camera on a schedule, with the camera
+    already awake when the recording starts.
+
+
+    A battery camera takes 40 seconds or more to wake, and a plain
+    `camera.record` spends that time waiting for the first picture. This
+    blueprint sends `aidot.wake` first, waits a lead time, records, and can
+    send `aidot.sleep` afterwards.
+
+
+    Steps: wake the camera and keep it awake - wait the lead time - record to
+    the file - optionally wait for the stream to close and send the camera
+    back to sleep.
+
+
+    Notes:
+
+    - A mains camera needs none of this: it never sleeps, and `aidot.wake` and
+      `aidot.sleep` are refused on it. The refusals are logged and the
+      recording is still made, after the lead time.
+
+    - `aidot.sleep` is refused while the camera is streaming or fetching a
+      card recording, for example when someone is still watching it. The
+      refusal is logged and the camera goes to sleep on its own once the view
+      ends.
+
+    - The folder of the recording must be one Home Assistant may write to:
+      the media folder, or a folder listed under `allowlist_external_dirs`.
+
+    - A run that starts while an earlier one is still going is dropped: a
+      camera has one media stream.
+  domain: automation
+  author: cbrightly
+  source_url: https://github.com/cbrightly/hass-aidot-cameras/blob/main/blueprints/automation/aidot/prewake_record.yaml
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    camera:
+      name: Camera
+      description: The AiDot battery camera to record from.
+      selector:
+        entity:
+          filter:
+            - integration: aidot
+              domain: camera
+    record_trigger:
+      name: When to record
+      description: >-
+        What starts a run. The camera is woken at this moment and the
+        recording starts one lead time later, so set a time that much earlier
+        than the moment you want on the recording.
+      default:
+        - trigger: time
+          at: "12:00:00"
+      selector:
+        trigger:
+    duration:
+      name: Recording length
+      default: 60
+      selector:
+        number:
+          min: 5
+          max: 600
+          unit_of_measurement: seconds
+          mode: box
+    filename:
+      name: File
+      description: >-
+        Where the recording is written; a template. `camera_slug` is the
+        camera's entity id without the `camera.` part. Home Assistant OS and
+        Container keep media under `/media`; a Core install under the `media`
+        folder of the configuration directory.
+      default: "/media/aidot/{{ camera_slug }}_{{ now().strftime('%Y%m%d_%H%M%S') }}.mp4"
+      selector:
+        text:
+    timing:
+      name: Wake and sleep
+      icon: mdi:sleep
+      collapsed: true
+      input:
+        lead_seconds:
+          name: Lead time
+          description: >-
+            How long to wait between the wake and the recording. 45 seconds
+            covers most wakes; a camera on weak Wi-Fi may need more.
+          default: 45
+          selector:
+            number:
+              min: 0
+              max: 240
+              unit_of_measurement: seconds
+              mode: box
+        hold_seconds:
+          name: Hold awake
+          description: >-
+            How long the wake keeps the camera awake until the recording
+            opens it (the `hold` of `aidot.wake`). At least the lead time
+            plus 15 seconds is used, whatever is set here.
+          default: 60
+          selector:
+            number:
+              min: 0
+              max: 300
+              unit_of_measurement: seconds
+              mode: box
+        sleep_after:
+          name: Send the camera back to sleep afterwards
+          description: >-
+            Call `aidot.sleep` after the recording instead of leaving the
+            camera to fall asleep on its own.
+          default: true
+          selector:
+            boolean:
+        sleep_delay:
+          name: Wait before the sleep
+          description: >-
+            The stream stays open for about half a minute after a recording
+            ends, and `aidot.sleep` is refused until it has closed.
+          default: 35
+          selector:
+            number:
+              min: 0
+              max: 120
+              unit_of_measurement: seconds
+              mode: box
+
+mode: single
+max_exceeded: silent
+
+variables:
+  camera_entity: !input camera
+  camera_slug: "{{ camera_entity.split('.')[-1] }}"
+  lead_seconds: !input lead_seconds
+  hold_seconds: !input hold_seconds
+  sleep_after: !input sleep_after
+
+triggers: !input record_trigger
+
+actions:
+  # Refused on a mains camera, and when the cloud does not take the request.
+  # Either way the recording is still worth trying, so carry on.
+  - alias: Wake the camera and keep it awake until the recording opens it
+    action: aidot.wake
+    target:
+      entity_id: !input camera
+    data:
+      hold: "{{ [[hold_seconds | int, lead_seconds | int + 15] | max, 300] | min }}"
+    continue_on_error: true
+  - alias: Give the camera time to wake
+    delay:
+      seconds: !input lead_seconds
+  # Carries on after a failed recording too, so that a camera this run woke
+  # is still sent back to sleep.
+  - alias: Record
+    action: camera.record
+    target:
+      entity_id: !input camera
+    data:
+      filename: !input filename
+      duration: !input duration
+    continue_on_error: true
+  - alias: Send the camera back to sleep
+    if:
+      - condition: template
+        value_template: "{{ sleep_after }}"
+    then:
+      - alias: Let the stream close
+        delay:
+          seconds: !input sleep_delay
+      # Refused while the camera is still streaming (someone is watching) or
+      # fetching a card recording; it then sleeps on its own after the view.
+      - alias: Sleep
+        action: aidot.sleep
+        target:
+          entity_id: !input camera
+        continue_on_error: true

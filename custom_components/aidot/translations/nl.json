@@ -1,0 +1,494 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Voer de inloggegevens van je AiDot-account in.",
+        "data": {
+          "country_code": "Land",
+          "username": "E-mailadres",
+          "password": "Wachtwoord"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Voer je wachtwoord voor {username} opnieuw in.",
+        "data": {
+          "password": "Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "description": "Werk de inloggegevens voor {username} bij.",
+        "data": {
+          "country_code": "Land",
+          "username": "E-mailadres",
+          "password": "Wachtwoord"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ongeldig e-mailadres of wachtwoord.",
+      "cannot_connect": "Kan geen verbinding maken met de AiDot-servers."
+    },
+    "abort": {
+      "already_configured": "Account is al geconfigureerd.",
+      "already_in_progress": "De configuratie is momenteel al bezig.",
+      "reauth_successful": "Herauthenticatie geslaagd.",
+      "reconfigure_successful": "Herconfiguratie geslaagd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AiDot-opties",
+        "menu_options": {
+          "streaming": "Liveweergave en verbinding",
+          "audio": "Audio en opnames",
+          "notifications": "Bewegingsmeldingen - doelen en tekst",
+          "camera_notifications": "Bewegingsmeldingen - per camera"
+        }
+      },
+      "streaming": {
+        "title": "Liveweergave en verbinding",
+        "data": {
+          "serve_port_base": "Basispoort voor camerastreams",
+          "connection_mode": "Verbindingsmodus",
+          "sdes_fast_liveplay": "SDES snel verbinden",
+          "mains_idle_s": "Warm houden van netstroomcamera's (seconden)",
+          "enable_local_control": "Lokale camerabediening",
+          "startup_prewarm": "Camerasessies voorverwarmen bij het opstarten",
+          "motion_prewarm": "Vooraf verbinden bij beweging",
+          "sd_list_on_view": "SD-kaart uitlezen wanneer een batterijcamera wordt bekeken"
+        },
+        "data_description": {
+          "serve_port_base": "Lokale basispoort voor de lokale server, die standaardcamera's (DTLS) gebruiken wanneer ze niet naar go2rtc publiceren; elke camera gebruikt basis..basis+399. Wijzig dit alleen als het botst met een andere dienst.",
+          "connection_mode": "Hoe camera's verbinding maken. Automatisch (aanbevolen) biedt elk pad aan en geeft de voorkeur aan het LAN, met de cloudrelay als terugvaloptie - camera's op hetzelfde LAN verbinden rechtstreeks, en alleen een camera zonder directe route loopt via de relay. Alleen LAN slaat de relay over voor een snellere start (~1 s tegenover ~3-4 s), maar een camera die Home Assistant niet rechtstreeks kan bereiken, maakt dan geen verbinding (batterijcamera's houden de relay hoe dan ook - het is hun enige weg terug na een wekactie via de cloud). Elke camera meldt het gebruikte pad onder Diagnostiek als media_path.",
+          "sdes_fast_liveplay": "Zoals de offici\u00eble app: sla het wachten op livePlayResp over en ga direct naar de video-handshake, zodat SDES-camera's (batterij) ~4,5 s eerder starten. Standaard AAN. De PTZ-camera is automatisch uitgesloten (de handshake daarvan heeft het tragere pad nodig). Zie je de liveweergave van een bepaalde camera ooit terugvallen op een momentopname, zet dit dan uit.",
+          "mains_idle_s": "Hoe lang de livesessie van een camera op netstroom warm wordt gehouden na de laatste kijker, zodat opnieuw openen direct gaat in plaats van de volledige koude-start-handshake te kosten. Standaard 0 = nooit vrijgeven (altijd warm, directe weergave). Stel een positief venster in (bijv. 300 = 5 min) om onbekeken camera's in rust te laten gaan; een camera in rust verbindt bij het bekijken opnieuw in ongeveer 2,4-3,3 s. Elke warme camera blijft ontsleutelen, wat CPU van de host kost. Batterijcamera's negeren dit: ze streamen alleen zolang iemand kijkt (het vernieuwen van de SD-kaartlijst van een batterijcamera wekt die ook kort) en stoppen binnen ongeveer een halve minuut nadat de laatste kijker is vertrokken (plus de 30 s van Home Assistant zelf voor het HLS-dialoogvenster).",
+          "enable_local_control": "Stuur camera-instellingen (led, bewegingsdetectie, nachtzicht, gevoeligheid, volume, PTZ-tracking) via het LAN in plaats van de cloud, voor geschikte camera's op netstroom. Sneller en werkt ook tijdens cloudstoringen; valt automatisch terug op de cloud. Heeft geen invloed op de video. Batterijcamera's worden overgeslagen.",
+          "startup_prewarm": "Open bij het opstarten op de achtergrond (gespreid) een sessie op elke camera op netstroom, zodat de eerste liveweergave na een herstart direct is in plaats van de koude start te kosten (ongeveer 2,4-3,3 s op een camera op netstroom). Standaard aan; zet uit om CPU van de host te besparen als er zelden wordt gekeken. Batterijcamera's zijn uitgesloten.",
+          "motion_prewarm": "Open de sessie van een camera op netstroom wanneer die beweging meldt, zodat een kort daarna geopende liveweergave warm start in plaats van de koude start te kosten (ongeveer 3 s); de sessie blijft daarna open zolang de warmhoudinstelling die vasthoudt. Standaard uit: een bewegingsmelding opent de cloudclip, geen liveweergave, dus de meeste van deze sessies streamen naar niemand. Alleen camera's op netstroom; batterijcamera's worden nooit vooraf verbonden.",
+          "sd_list_on_view": "Alleen voor batterijcamera's. Terwijl een liveweergave (of een camera.record) van een batterijcamera loopt, wordt de camera ook gevraagd wat er op de SD-kaart staat, via de sessie die deze weergave al open heeft, zodat de map On device in de mediabrowser wordt gevuld zonder op Opnames op het apparaat vernieuwen te drukken. De camera wordt hiervoor nooit gewekt, er wordt geen eigen sessie geopend en de camera blijft niet wakker nadat de weergave is gesloten; een weergave van minder dan een paar seconden krijgt geen lijst. Hooguit \u00e9\u00e9n lijst per camera per 5 minuten, en geen zolang de lijst minder dan 15 minuten oud is. Standaard uit: het uitlezen deelt de wifi-verbinding van de camera met het livebeeld. Werkt zonder herladen."
+        }
+      },
+      "audio": {
+        "title": "Audio en opnames",
+        "data": {
+          "sdes_audio_gain_db": "Audioversterking van de camera (dB)",
+          "publish_mode": "Publiceren, en audio in HLS en opnames"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Volumecorrectie voor camera-audio, toegepast na de niveaunormalisatie die de bibliotheek op elke camera uitvoert. 0 dB (de standaard) geeft een batterij- of PTZ-camera weer op dezelfde luidheid als een M3 Pro. Verhoog dit als een camera te zacht is, verlaag het als die overstuurt. Geldt voor SDES-camera's (batterij en PTZ). Installaties die de oude standaard van -8 dB hebben opgeslagen, behouden die; stel 0 in om ze gelijk te trekken met de andere.",
+          "publish_mode": "Hoe elke camera go2rtc bereikt, en hoe het HLS-dialoogvenster van Home Assistant (de Afbeelding-kaarten) en opnames met camera.record hun geluid krijgen. WebRTC-weergaven dragen in elke modus de eigen audio van de camera. Direct publiceren stuurt de video en audio van elke camera rechtstreeks naar go2rtc zonder ffmpeg-proces ertussen: SDES-camera's publiceren altijd, en standaardcamera's (DTLS) publiceren naar een go2rtc op poort 1984 (of AIDOT_GO2RTC_API) wanneer die antwoordt, en behouden anders hun lokale serverpoort. Er wordt niets gepubliceerd naar de go2rtc die met Home Assistant is meegeleverd. Synchroon (de standaard) laat bovendien het HLS-dialoogvenster en opnames de stream van elke camera op netstroom rechtstreeks van deze integratie lezen, met geluid en beeld op \u00e9\u00e9n klok (batterijcamera's blijven die van go2rtc lezen); via go2rtc kan bij een opname die begint terwijl de camera al streamt het geluid tot ongeveer 0,75 s achterlopen op het beeld. De AAC-kopie van de camera-audio die HLS en opnames van geluid voorziet, kost ongeveer 2-3 % van \u00e9\u00e9n CPU-kern per streamende camera; de modi zonder audio besparen dat. De ffmpeg-modi gaan terug naar een ffmpeg-proces per standaardcamera; SDES-camera's publiceren nog steeds rechtstreeks."
+        }
+      },
+      "notifications": {
+        "title": "Bewegingsmeldingen",
+        "data": {
+          "targets": "Standaarddoelen voor meldingen",
+          "cooldown_s": "Afkoeltijd per camera (seconden)",
+          "title": "Titel van de melding",
+          "message": "Bericht van de melding",
+          "open_in_app": "Open de clip in de Home Assistant-app (experimenteel)"
+        },
+        "data_description": {
+          "targets": "De notify-services waarnaar wordt verzonden (bijvoorbeeld een telefoon met de companion-app). Gebruikt door elke camera die geen eigen doelen instelt. Je kunt een servicenaam typen die niet in de lijst staat.",
+          "cooldown_s": "Na een melding voor een camera wordt verdere beweging van die camera zo lang niet verzonden. Een persoonsdetectie komt nog wel door een afkoeltijd die door gewone beweging is gestart. 0 schakelt de afkoeltijd uit.",
+          "title": "Plaatshouders: camera, event (motion/person), event_title (Motion/Person), time, device_id. Schrijf elk daarvan tussen accolades in de titel of het bericht.",
+          "message": "Dezelfde plaatshouders als bij de titel.",
+          "open_in_app": "Wanneer op een melding wordt getikt, wordt de clip van de gebeurtenis afgespeeld op een pagina in de Home Assistant-app. Uit: de tik opent de eigen link van de clip, die de iPhone-app in Safari opent."
+        }
+      },
+      "camera_notifications": {
+        "title": "Bewegingsmeldingen - kies een camera",
+        "data": {
+          "camera": "Camera"
+        },
+        "data_description": {
+          "camera": "De camera waarvan je de meldingsinstellingen wilt wijzigen."
+        }
+      },
+      "camera_notify": {
+        "title": "Bewegingsmeldingen - {camera}",
+        "data": {
+          "events": "Stuur een melding voor",
+          "targets": "Doelen voor deze camera"
+        },
+        "data_description": {
+          "events": "Uit: nooit. Alle: elke bewegings- en persoonsgebeurtenis. Alleen persoon: alleen wanneer de camera een persoon meldt.",
+          "targets": "Laat leeg om de standaarddoelen te gebruiken."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Er zijn nog geen camera's geladen. Probeer het opnieuw zodra de integratie klaar is met opstarten."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Automatisch - voorkeur voor LAN, relay als terugvaloptie (aanbevolen)",
+        "lan_direct": "Alleen LAN (snelst, alleen op hetzelfde netwerk)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Uit",
+        "all": "Alle bewegings- en persoonsgebeurtenissen",
+        "person": "Alleen persoon"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Direct publiceren, synchrone audio voor HLS en opnames (aanbevolen)",
+        "go2rtc": "Direct publiceren, HLS en opnames via go2rtc",
+        "no_hls_audio": "Direct publiceren, geen audio in HLS en opnames",
+        "ffmpeg": "ffmpeg per standaardcamera",
+        "ffmpeg_no_hls_audio": "ffmpeg per standaardcamera, geen audio in HLS en opnames"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "Er kon geen audio worden gedecodeerd uit {media} - controleer de media-URL of het pad."
+    },
+    "talk_session_failed": {
+      "message": "Er kon geen spreeksessie worden opgezet: de camera was niet bereikbaar, of geen enkele sessie kon spraak overbrengen. Een liveweergave is niet nodig."
+    },
+    "ptz_failed": {
+      "message": "PTZ-opdracht {direction} is niet verzonden (de camera moet streamen - open eerst de liveweergave)."
+    },
+    "sd_playback_not_running": {
+      "message": "Er wordt op deze camera geen SD-kaartopname opgehaald."
+    },
+    "command_failed": {
+      "message": "AiDot {action} mislukt: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} is door het apparaat geweigerd."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} is voor batterijcamera's; deze camera werkt op netstroom en slaapt nooit."
+    },
+    "wake_refused": {
+      "message": "De cloud heeft het wekverzoek niet geaccepteerd (zie het logboek)."
+    },
+    "sleep_refused": {
+      "message": "De cloud heeft het slaapverzoek niet geaccepteerd (zie het logboek)."
+    },
+    "camera_in_use": {
+      "message": "De camera streamt of haalt een kaartopname op; stop dat eerst, of laat de weergave eindigen."
+    },
+    "sd_recording_not_found": {
+      "message": "Geen kaartopname komt overeen; geef de sleutel van de opname uit de mediabrowser of de exacte starttijd op, en vernieuw eerst de kaartlijst."
+    },
+    "sd_delete_no_session": {
+      "message": "De camera moet streamen om een kaartopname te verwijderen; open eerst de liveweergave."
+    },
+    "sd_delete_refused": {
+      "message": "De camera weigerde de opname te verwijderen."
+    },
+    "sd_recording_ambiguous": {
+      "message": "Meer dan \u00e9\u00e9n kaartopname begint in die seconde; geef de te verwijderen opname aan met de sleutel uit de mediabrowser."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Bewegingsgevoeligheid"
+      },
+      "speaker_volume": {
+        "name": "Luidsprekervolume"
+      },
+      "light_brightness": {
+        "name": "Helderheid van het licht"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "Licht wanneer iemand verschijnt"
+      },
+      "camera_audio": {
+        "name": "Camera-audio (in HA-stream)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Microfoon (audioprivacy)"
+      },
+      "motion_detection": {
+        "name": "Bewegingsdetectie"
+      },
+      "osd_timestamp": {
+        "name": "Watermerk"
+      },
+      "ptz_tracking": {
+        "name": "Automatisch volgen"
+      },
+      "sound_all": {
+        "name": "Alle geluidsdetectie"
+      },
+      "sound_baby_cry": {
+        "name": "Detectie van babygehuil"
+      },
+      "sound_dog_bark": {
+        "name": "Detectie van hondengeblaf"
+      },
+      "sound_enable": {
+        "name": "Geluidsdetectie"
+      },
+      "sound_glass_break": {
+        "name": "Detectie van glasbreuk"
+      },
+      "sound_smoke_t3": {
+        "name": "Detectie van rookalarm (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "Detectie van rookalarm (T4)"
+      },
+      "status_led": {
+        "name": "Statusled"
+      },
+      "voice_prompts": {
+        "name": "Gesproken meldingen"
+      },
+      "detect_human": {
+        "name": "Persoonsdetectie"
+      },
+      "detect_vehicle": {
+        "name": "Voertuigdetectie"
+      },
+      "detect_package": {
+        "name": "Pakketdetectie"
+      },
+      "detect_pet": {
+        "name": "Huisdierdetectie"
+      },
+      "auto_siren": {
+        "name": "Automatisch alarm"
+      },
+      "auto_siren_on_motion": {
+        "name": "Automatisch alarm bij beweging"
+      },
+      "auto_siren_on_person": {
+        "name": "Automatisch alarm bij persoon"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Automatisch alarm bij glasbreuk"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Nachtzicht",
+        "state": {
+          "auto": "Automatisch",
+          "on": "Aan",
+          "off": "Uit"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Nabrandtijd",
+        "state": {
+          "20": "20 seconden",
+          "30": "30 seconden",
+          "40": "40 seconden",
+          "50": "50 seconden"
+        }
+      },
+      "light_behavior": {
+        "name": "Lichtgedrag",
+        "state": {
+          "constant": "Constant",
+          "flash": "Knipperen"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Beweging",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Beweging",
+              "person": "Persoon",
+              "vehicle": "Voertuig",
+              "package": "Pakket",
+              "pet": "Huisdier"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Batterij"
+      },
+      "sd_card_status": {
+        "name": "SD-kaart",
+        "state": {
+          "present": "Kaart in sleuf",
+          "empty": "Sleuf leeg"
+        }
+      },
+      "sd_card_total": {
+        "name": "SD-kaart totaal"
+      },
+      "sd_card_used": {
+        "name": "SD-kaart gebruikt"
+      },
+      "wifi_rssi": {
+        "name": "Wifi-signaal"
+      },
+      "wifi_ssid": {
+        "name": "Wifi-netwerk"
+      },
+      "last_connect_time": {
+        "name": "Laatste verbindingstijd",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Laatste reden van be\u00ebindiging",
+            "state": {
+              "idle_release": "Geen kijker",
+              "stopped": "Gestopt",
+              "connection_lost": "Verbinding verbroken",
+              "camera_closed": "Gesloten door de camera",
+              "serve_ended": "Streamafnemer is verdwenen",
+              "no_video": "Geen video",
+              "media_stalled": "Media gestopt",
+              "ice_lost": "Camera reageert niet meer",
+              "no_media": "Geen media",
+              "wrong_codec": "Verkeerde videocodec",
+              "busy": "Camera bezet",
+              "not_ready": "Camera niet gereed",
+              "open_failed": "Verbinden mislukt",
+              "error": "Interne fout"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "Streamstatus",
+        "state": {
+          "idle": "Inactief",
+          "connecting": "Verbinden",
+          "waking": "Wekken",
+          "streaming": "Streamt",
+          "retrying": "Opnieuw proberen",
+          "dormant": "Rustend",
+          "off": "Uit"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Laatste reden van be\u00ebindiging",
+            "state": {
+              "idle_release": "Geen kijker",
+              "stopped": "Gestopt",
+              "connection_lost": "Verbinding verbroken",
+              "camera_closed": "Gesloten door de camera",
+              "serve_ended": "Streamafnemer is verdwenen",
+              "no_video": "Geen video",
+              "media_stalled": "Media gestopt",
+              "ice_lost": "Camera reageert niet meer",
+              "no_media": "Geen media",
+              "wrong_codec": "Verkeerde videocodec",
+              "busy": "Camera bezet",
+              "not_ready": "Camera niet gereed",
+              "open_failed": "Verbinden mislukt",
+              "error": "Interne fout"
+            }
+          },
+          "failures": {
+            "name": "Mislukte pogingen"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Bezetting"
+      },
+      "person_detected": {
+        "name": "Persoon gedetecteerd"
+      },
+      "vehicle_detected": {
+        "name": "Voertuig gedetecteerd"
+      },
+      "package_detected": {
+        "name": "Pakket gedetecteerd"
+      },
+      "pet_detected": {
+        "name": "Huisdier gedetecteerd"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Omhoog bewegen"
+      },
+      "ptz_down": {
+        "name": "Omlaag bewegen"
+      },
+      "ptz_left": {
+        "name": "Naar links bewegen"
+      },
+      "ptz_right": {
+        "name": "Naar rechts bewegen"
+      },
+      "ptz_stop": {
+        "name": "Stop"
+      },
+      "ptz_zoom_in": {
+        "name": "Inzoomen"
+      },
+      "ptz_zoom_out": {
+        "name": "Uitzoomen"
+      },
+      "reboot": {
+        "name": "Herstarten"
+      },
+      "refresh_sd_recordings": {
+        "name": "Opnames op het apparaat vernieuwen"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sirene"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Schijnwerper"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "Laatste gebeurtenis"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "go2rtc weigert streamupdates",
+      "description": "go2rtc beantwoordde de registratie van stream `{stream}` met een fout, en de stream was er nog steeds. Het configuratiebestand (go2rtc.yaml) bevat hoogstwaarschijnlijk een stream die twee keer is vermeld, waardoor go2rtc elke registratie voor elke camera weigert totdat het duplicaat met de hand is verwijderd. De liveweergave blijft werken met wat go2rtc al heeft; een camera die sindsdien is toegevoegd of hernoemd, wordt niet geregistreerd. Zie het gedeelte over probleemoplossing in de README. Deze melding verdwijnt zodra een registratie slaagt."
+    },
+    "light_off_subnet": {
+      "title": "{name} zit op een ander netwerk",
+      "description": "De lamp `{name}` is voor het laatst gemeld op `{address}`, wat buiten elk netwerk valt waarop Home Assistant zit ({networks}), waardoor de aanmelding voor lokale bediening mislukt. Als de lamp stroom heeft, wordt die alleen via de cloud bediend. Verplaats de lamp naar een netwerk dat Home Assistant deelt, of geef Home Assistant een route ernaartoe. Dit verdwijnt zodra een lokale aanmelding slaagt."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "De go2rtc van Home Assistant leest de server waarnaar de camera's publiceren",
+      "description": "De go2rtc van Home Assistant is geconfigureerd met `url: {url}`, en dat is de go2rtc waarnaar de AiDot-camera's zouden publiceren. Home Assistant kan een stream die een camera publiceert niet lezen, dus daarheen publiceren zou de liveweergave van elke camera laten mislukken, AiDot of niet. Totdat dit is opgelost, worden standaardcamera's in plaats daarvan opgehaald (geen synchrone HLS-audio of AAC-spoor) en worden SDES-camera's (de batterij- en PTZ-modellen) niet gestreamd. Verwijder op Home Assistant OS of Container de regel `url:` uit de sectie `go2rtc:` van configuration.yaml en herstart: Home Assistant gebruikt dan zijn ingebouwde go2rtc en de camera's publiceren naar de andere server. Draai op Home Assistant Core een tweede go2rtc voor de camera's en stel AIDOT_GO2RTC_API daarop in. Dit verdwijnt zodra de twee verschillende servers zijn."
+    },
+    "sdes_no_go2rtc": {
+      "title": "Geen go2rtc om SDES-camera's naar te publiceren",
+      "description": "Geen go2rtc antwoordde: niets op 127.0.0.1:1984 en geen AIDOT_GO2RTC_API, en de in Home Assistant ingebouwde go2rtc kan geen gepubliceerde stream aannemen. SDES-camera's (de batterij- en PTZ-modellen) hebben geen ander pad en worden niet gestreamd; standaardcamera's streamen nog steeds, rechtstreeks opgehaald. Installeer een go2rtc-add-on die antwoordt op 127.0.0.1:1984 - de integratie WebRTC Camera of de go2rtc-add-on - en herstart. Stel op Home Assistant Core in plaats daarvan AIDOT_GO2RTC_API in op een go2rtc die je zelf draait, en herstart. Dit verdwijnt zodra een go2rtc antwoordt."
+    },
+    "weak_wifi": {
+      "title": "{name} heeft een zwak wifi-signaal",
+      "description": "De camera `{name}` meldt een wifi-signaal van {rssi} dBm. Het is minstens {minutes} minuten onder {threshold} dBm gebleven, en {stalls} van de liveweergaven in de afgelopen {hours} uur hadden {slow} seconden of meer nodig om te starten, of startten niet. Bij zo'n zwak signaal antwoordt de camera vaak en stuurt daarna geen video, zodat de kaart leeg blijft tot een nieuwe poging slaagt. Zet de camera dichter bij het wifi-toegangspunt, verplaats een toegangspunt of voeg er een toe dichter bij de camera, of haal weg wat ertussen staat. Deze melding verdwijnt zodra het signaal {clear} dBm of beter aangeeft, of de liveweergave weer vlot start."
+    }
+  }
+}
