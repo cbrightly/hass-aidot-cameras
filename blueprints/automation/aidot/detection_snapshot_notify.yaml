@@ -1,0 +1,233 @@
+blueprint:
+  name: "AiDot: notify with a snapshot on detection"
+  description: >-
+    Send a notification with a camera snapshot when an AiDot camera reports a
+    detection of a chosen kind (motion, person, vehicle, package, pet).
+
+
+    **This or the built-in notifications?** The integration already sends
+    detection notifications by itself, set under **Settings - Devices &
+    Services - AiDot Cameras - Configure - Motion notifications**. Use the
+    built-in ones when
+    all you need is which cameras, motion or person only, which notify
+    services, and a cooldown: they carry the camera's own picture of the
+    event, and a tap opens the clip. Use this blueprint when the notification
+    needs something those cannot do: a condition (only when nobody is home,
+    only at night), other kinds than person, a different target or text per
+    camera, or extra notification data such as a channel or a tag. Turn the
+    built-in notifications off for a camera that uses this blueprint, or
+    every detection is announced twice.
+
+
+    Steps: the camera's Motion event entity fires - the kind, the cooldown
+    and your extra conditions are checked - a snapshot is saved to a file -
+    the notification is sent with that file as its picture.
+
+
+    Notes:
+
+    - The picture is what `camera.snapshot` returns: a live frame while the
+      camera is streaming, otherwise the camera's latest cloud event picture,
+      which Home Assistant refreshes at most every 5 minutes. On a camera
+      that is not streaming it can therefore be the picture of an earlier
+      event. No camera is woken for it.
+
+    - Detections arrive from the cloud event list, typically about half a
+      minute after the camera started recording.
+
+    - The picture is sent as `data.image`, the form the Home Assistant mobile
+      apps read. The snapshot file is overwritten by each detection.
+  domain: automation
+  author: cbrightly
+  source_url: https://github.com/cbrightly/hass-aidot-cameras/blob/main/blueprints/automation/aidot/detection_snapshot_notify.yaml
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    motion_event:
+      name: Motion event entity
+      description: The camera's **Motion** event entity.
+      selector:
+        entity:
+          filter:
+            - integration: aidot
+              domain: event
+    camera:
+      name: Camera
+      description: The same camera's camera entity, for the snapshot.
+      selector:
+        entity:
+          filter:
+            - integration: aidot
+              domain: camera
+    kinds:
+      name: Kinds of detection
+      description: Which event types to notify for.
+      default:
+        - motion
+        - person
+        - vehicle
+        - package
+        - pet
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Motion
+              value: motion
+            - label: Person
+              value: person
+            - label: Vehicle
+              value: vehicle
+            - label: Package
+              value: package
+            - label: Pet
+              value: pet
+    notify_action:
+      name: Notify action
+      description: >-
+        The notify action to call, for example `notify.mobile_app_my_phone`
+        or a notify group.
+      default: notify.notify
+      selector:
+        text:
+    title:
+      name: Title
+      description: >-
+        A template. Available: `camera_name`, `kind` (motion, person,
+        vehicle, package, pet), `kind_title` (Motion, Person, ...) and
+        `event_description` (the camera's own text for the event, often
+        empty).
+      default: "{{ camera_name }}: {{ kind_title }}"
+      selector:
+        text:
+    message:
+      name: Message
+      description: >-
+        A template, with the same variables as the title. Do not add the
+        event entity's `pic_url` attribute to a notification: it is a signed
+        link to the cloud picture, and whoever has the link can open it.
+      default: "{{ kind_title }} detected at {{ now().strftime('%H:%M') }}"
+      selector:
+        text:
+          multiline: true
+    cooldown_seconds:
+      name: Cooldown
+      description: >-
+        No further notification from this automation until this long after
+        the last one it sent.
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+          mode: box
+    extra_conditions:
+      name: Extra conditions
+      description: >-
+        Optional. The notification is sent only when all of these hold, for
+        example nobody home or after sunset.
+      default: []
+      selector:
+        condition:
+    advanced:
+      name: Snapshot file and notification data
+      icon: mdi:image-outline
+      collapsed: true
+      input:
+        snapshot_folder:
+          name: Snapshot folder
+          description: >-
+            The folder the snapshot is written to. Home Assistant must be
+            allowed to write there: the media folder, or a folder listed
+            under `allowlist_external_dirs`. Home Assistant OS and Container
+            keep media under `/media`; a Core install under the `media`
+            folder of the configuration directory.
+          default: /media/aidot
+          selector:
+            text:
+        snapshot_url_folder:
+          name: Snapshot folder as the notification names it
+          description: >-
+            The same folder as the notify service addresses it. The mobile
+            apps read the media folder as `/media/local` and sign in to fetch
+            the picture. The `www` folder (`/local`) also works, but anything
+            there can be opened without signing in.
+          default: /media/local/aidot
+          selector:
+            text:
+        extra_data:
+          name: Extra notification data
+          description: >-
+            Optional. Added to the notification's `data` beside the picture,
+            for example `channel`, `tag` or `clickAction`.
+          default: {}
+          selector:
+            object:
+
+mode: single
+max_exceeded: silent
+
+variables:
+  camera_entity: !input camera
+  kinds: !input kinds
+  cooldown_seconds: !input cooldown_seconds
+  extra_data: !input extra_data
+  snapshot_folder: !input snapshot_folder
+  snapshot_url_folder: !input snapshot_url_folder
+  # Only the event type and the camera's text are taken from the event. Its
+  # pic_url attribute (a signed cloud link) is deliberately not read here.
+  kind: >-
+    {{ (trigger.to_state.attributes.event_type if trigger.to_state else none)
+       | default('motion', true) }}
+  kind_title: "{{ kind | capitalize }}"
+  event_description: >-
+    {{ (trigger.to_state.attributes.description if trigger.to_state else none)
+       | default('', true) }}
+  camera_name: "{{ state_attr(camera_entity, 'friendly_name') or camera_entity }}"
+  snapshot_name: "{{ camera_entity.split('.')[-1] }}_last_detection.jpg"
+  snapshot_file: "{{ snapshot_folder.rstrip('/') }}/{{ snapshot_name }}"
+  image_url: "{{ snapshot_url_folder.rstrip('/') }}/{{ snapshot_name }}"
+
+triggers:
+  - trigger: state
+    entity_id: !input motion_event
+
+conditions:
+  # A new event is a new state (its time). Leave out attribute-only changes,
+  # the entity coming back after a restart or a reload (its last event is
+  # restored, not fired again) and the entity going away.
+  - alias: A new event of a chosen kind
+    condition: template
+    value_template: >-
+      {{ trigger.to_state is not none and trigger.from_state is not none
+         and trigger.to_state.state not in ['unavailable', 'unknown']
+         and trigger.from_state.state != 'unavailable'
+         and trigger.to_state.state != trigger.from_state.state
+         and trigger.to_state.attributes.event_type in kinds }}
+  - alias: Cooldown since the last notification
+    condition: template
+    value_template: >-
+      {{ as_timestamp(now())
+         - as_timestamp(this.attributes.last_triggered | default(none), 0)
+         >= cooldown_seconds | float(0) }}
+  - alias: Extra conditions
+    condition: and
+    conditions: !input extra_conditions
+
+actions:
+  # A failed snapshot must not cost the notification. The file then still
+  # holds the previous detection's picture, if there was one.
+  - alias: Save a snapshot
+    action: camera.snapshot
+    target:
+      entity_id: !input camera
+    data:
+      filename: "{{ snapshot_file }}"
+    continue_on_error: true
+  - alias: Notify
+    action: !input notify_action
+    data:
+      title: !input title
+      message: !input message
+      data: "{{ dict({'image': image_url}, **(extra_data or {})) }}"

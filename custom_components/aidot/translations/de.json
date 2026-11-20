@@ -1,0 +1,510 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Gib die Zugangsdaten deines AiDot-Kontos ein.",
+        "data": {
+          "country_code": "Land",
+          "username": "E-Mail-Adresse",
+          "password": "Passwort"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Gib dein Passwort f\u00fcr {username} erneut ein.",
+        "data": {
+          "password": "Passwort"
+        }
+      },
+      "reconfigure": {
+        "description": "Zugangsdaten f\u00fcr {username} aktualisieren.",
+        "data": {
+          "country_code": "Land",
+          "username": "E-Mail-Adresse",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ung\u00fcltige E-Mail-Adresse oder ung\u00fcltiges Passwort.",
+      "cannot_connect": "Verbindung zu den AiDot-Servern nicht m\u00f6glich."
+    },
+    "abort": {
+      "already_configured": "Konto wurde bereits konfiguriert.",
+      "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AiDot-Optionen",
+        "menu_options": {
+          "streaming": "Livebild und Verbindung",
+          "audio": "Ton und Aufnahmen",
+          "notifications": "Bewegungsbenachrichtigungen - Ziele und Wortlaut",
+          "camera_notifications": "Bewegungsbenachrichtigungen - pro Kamera"
+        }
+      },
+      "streaming": {
+        "title": "Livebild und Verbindung",
+        "data": {
+          "serve_port_base": "Basisport f\u00fcr Kamerastreams",
+          "connection_mode": "Verbindungsmodus",
+          "sdes_fast_liveplay": "SDES-Schnellverbindung",
+          "mains_idle_s": "Warmhalten netzbetriebener Kameras (Sekunden)",
+          "enable_local_control": "Lokale Kamerasteuerung",
+          "startup_prewarm": "Kamerasitzungen beim Start vorw\u00e4rmen",
+          "motion_prewarm": "Bei Bewegung vorab verbinden",
+          "sd_list_on_view": "SD-Karte auflisten, wenn eine Akkukamera angesehen wird"
+        },
+        "data_description": {
+          "serve_port_base": "Lokaler Basisport f\u00fcr die lokale Bereitstellung, die Standardkameras (DTLS) nutzen, wenn sie nicht in go2rtc einspeisen; jede Kamera verwendet Basis..Basis+399. Nur \u00e4ndern, wenn es einen Konflikt mit einem anderen Dienst gibt.",
+          "connection_mode": "Wie sich Kameras verbinden. Automatisch (empfohlen) bietet jeden Weg an und bevorzugt das LAN, das Cloud-Relay bleibt als Ausweichweg - Kameras im selben LAN verbinden sich direkt, und nur eine Kamera ohne direkte Route l\u00e4uft \u00fcber das Relay. Nur LAN \u00fcberspringt das Relay f\u00fcr einen schnelleren Start (~1 s statt ~3-4 s), aber eine Kamera, die Home Assistant nicht direkt erreichen kann, verbindet sich dann nicht (Akkukameras behalten das Relay in jedem Fall - es ist ihr einziger R\u00fcckweg nach einem Aufwecken \u00fcber die Cloud). Jede Kamera meldet den verwendeten Weg unter Diagnose als media_path.",
+          "sdes_fast_liveplay": "Wie in der offiziellen App: Das Warten auf livePlayResp wird \u00fcbersprungen und direkt der Video-Handshake gestartet, sodass SDES-Kameras (Akku) ~4,5 s fr\u00fcher starten. Standardm\u00e4\u00dfig EIN. Die PTZ-Kamera ist automatisch ausgenommen (ihr Handshake braucht den langsameren Weg). Falls das Livebild einer bestimmten Kamera einmal auf ein Standbild zur\u00fcckf\u00e4llt, schalte dies aus.",
+          "mains_idle_s": "Wie lange die Live-Sitzung einer netzbetriebenen Kamera nach dem letzten Zuschauer warm gehalten wird, damit das erneute \u00d6ffnen sofort erfolgt, statt den vollen Kaltstart-Handshake zu kosten. Standard 0 = nie freigeben (immer warm, sofortige Ansicht). Setze ein positives Zeitfenster (z. B. 300 = 5 min), damit unbeobachtete Kameras in den Ruhezustand gehen; eine ruhende Kamera verbindet sich beim Ansehen in etwa 2,4-3,3 s neu. Jede warme Kamera entschl\u00fcsselt weiter, was CPU-Leistung des Hosts kostet. Akkukameras ignorieren dies: Sie streamen nur, solange jemand zusieht (das Aktualisieren der SD-Kartenliste einer Akkukamera weckt sie ebenfalls kurz auf), und stoppen etwa eine halbe Minute, nachdem der letzte Zuschauer gegangen ist (plus die 30 s von Home Assistant selbst f\u00fcr den HLS-Dialog).",
+          "enable_local_control": "Kameraeinstellungen (LED, Bewegungserkennung, Nachtsicht, Empfindlichkeit, Lautst\u00e4rke, PTZ-Verfolgung) bei geeigneten netzbetriebenen Kameras \u00fcber das LAN statt \u00fcber die Cloud senden. Schneller und funktioniert auch bei Cloud-Ausf\u00e4llen; f\u00e4llt automatisch auf die Cloud zur\u00fcck. Hat keinen Einfluss auf das Video. Akkukameras werden \u00fcbersprungen.",
+          "startup_prewarm": "Beim Start im Hintergrund (gestaffelt) eine Sitzung zu jeder netzbetriebenen Kamera \u00f6ffnen, damit das erste Livebild nach einem Neustart sofort erscheint, statt den Kaltstart zu kosten (etwa 2,4-3,3 s bei einer netzbetriebenen Kamera). Standardm\u00e4\u00dfig ein; ausschalten, um CPU-Leistung des Hosts zu sparen, wenn selten zugesehen wird. Akkukameras sind ausgenommen.",
+          "motion_prewarm": "Die Sitzung einer netzbetriebenen Kamera \u00f6ffnen, sobald sie Bewegung meldet, damit ein kurz darauf ge\u00f6ffnetes Livebild warm startet, statt den Kaltstart zu kosten (etwa 3 s); die Sitzung bleibt danach so lange offen, wie die Warmhalte-Einstellung es vorsieht. Standardm\u00e4\u00dfig aus: Eine Bewegungsbenachrichtigung \u00f6ffnet den Cloud-Clip, kein Livebild, daher streamen die meisten dieser Sitzungen an niemanden. Nur netzbetriebene Kameras; Akkukameras werden nie vorab verbunden.",
+          "sd_list_on_view": "Nur f\u00fcr Akkukameras. W\u00e4hrend ein Livebild (oder ein camera.record) einer Akkukamera l\u00e4uft, wird die Kamera \u00fcber die bereits offene Sitzung auch nach dem Inhalt ihrer SD-Karte gefragt, sodass sich der Ordner On device im Medienbrowser f\u00fcllt, ohne Aufnahmen auf dem Ger\u00e4t aktualisieren zu dr\u00fccken. Die Kamera wird daf\u00fcr nie geweckt, es wird keine eigene Sitzung ge\u00f6ffnet, und die Kamera bleibt nach dem Schlie\u00dfen des Livebilds nicht wach; ein Livebild von nur wenigen Sekunden erh\u00e4lt keine Liste. H\u00f6chstens eine Auflistung pro Kamera alle 5 Minuten, und keine, solange die Liste j\u00fcnger als 15 Minuten ist. Standardm\u00e4\u00dfig aus: Die Auflistung teilt sich die WLAN-Verbindung der Kamera mit dem Livebild. Wirkt ohne Neuladen."
+        }
+      },
+      "audio": {
+        "title": "Ton und Aufnahmen",
+        "data": {
+          "sdes_audio_gain_db": "Verst\u00e4rkung des Kameratons (dB)",
+          "publish_mode": "Einspeisung sowie Ton in HLS und Aufnahmen"
+        },
+        "data_description": {
+          "sdes_audio_gain_db": "Lautst\u00e4rkekorrektur f\u00fcr den Kameraton, angewendet nach der Pegelnormalisierung, die die Bibliothek bei jeder Kamera durchf\u00fchrt. 0 dB (Standard) gibt eine Akku- oder PTZ-Kamera mit derselben Lautst\u00e4rke wie eine M3 Pro wieder. Erh\u00f6he den Wert, wenn eine Kamera zu leise ist, verringere ihn, wenn sie \u00fcbersteuert. Gilt f\u00fcr SDES-Kameras (Akku und PTZ). Installationen, die den alten Standard von -8 dB gespeichert haben, behalten ihn; setze 0, um sie an die anderen anzugleichen.",
+          "publish_mode": "Wie jede Kamera go2rtc erreicht und wie der HLS-Dialog von Home Assistant (die Bild-Karten) und Aufnahmen mit camera.record ihren Ton erhalten. WebRTC-Ansichten \u00fcbertragen in jedem Modus den eigenen Ton der Kamera. Direkte Einspeisung sendet Video und Ton jeder Kamera ohne zwischengeschalteten ffmpeg-Prozess direkt an go2rtc: SDES-Kameras speisen immer ein, und Standardkameras (DTLS) speisen in ein go2rtc auf Port 1984 (oder AIDOT_GO2RTC_API) ein, wenn es antwortet, und behalten andernfalls ihren lokalen Bereitstellungsport. In das mit Home Assistant geb\u00fcndelte go2rtc wird nichts eingespeist. Synchron (Standard) l\u00e4sst au\u00dferdem den HLS-Dialog und Aufnahmen den Stream jeder netzbetriebenen Kamera direkt von dieser Integration lesen, mit Ton und Bild auf einer gemeinsamen Uhr (Akkukameras lesen weiterhin den von go2rtc); \u00fcber go2rtc kann bei einer Aufnahme, die beginnt, w\u00e4hrend die Kamera bereits streamt, der Ton bis zu etwa 0,75 s hinter dem Bild liegen. Die AAC-Kopie des Kameratons, die HLS und Aufnahmen ihren Ton gibt, kostet etwa 2-3 % eines CPU-Kerns pro streamender Kamera; die Modi ohne Ton sparen das ein. Die ffmpeg-Modi kehren zu einem ffmpeg-Prozess pro Standardkamera zur\u00fcck; SDES-Kameras speisen weiterhin direkt ein."
+        }
+      },
+      "notifications": {
+        "title": "Bewegungsbenachrichtigungen",
+        "data": {
+          "targets": "Standardziele f\u00fcr Benachrichtigungen",
+          "cooldown_s": "Abklingzeit pro Kamera (Sekunden)",
+          "title": "Titel der Benachrichtigung",
+          "message": "Text der Benachrichtigung",
+          "open_in_app": "Clip in der Home Assistant App \u00f6ffnen (experimentell)"
+        },
+        "data_description": {
+          "targets": "Die Benachrichtigungsdienste, an die gesendet wird (zum Beispiel ein Telefon mit der Companion-App). Wird von jeder Kamera verwendet, die keine eigenen Ziele festlegt. Du kannst auch einen Dienstnamen eingeben, der nicht aufgef\u00fchrt ist.",
+          "cooldown_s": "Nach einer Benachrichtigung f\u00fcr eine Kamera werden weitere Bewegungen dieser Kamera so lange nicht gesendet. Eine Personenerkennung kommt trotzdem durch eine Abklingzeit, die durch einfache Bewegung ausgel\u00f6st wurde. 0 deaktiviert die Abklingzeit.",
+          "title": "Platzhalter: camera, event (motion/person), event_title (Motion/Person), time, device_id. Schreibe jeden davon in geschweiften Klammern in den Titel oder den Text.",
+          "message": "Dieselben Platzhalter wie beim Titel.",
+          "open_in_app": "Beim Antippen einer Benachrichtigung wird der Clip des Ereignisses auf einer Seite in der Home Assistant App abgespielt. Aus: Das Antippen \u00f6ffnet den Link des Clips selbst, den die iPhone-App in Safari \u00f6ffnet."
+        }
+      },
+      "camera_notifications": {
+        "title": "Bewegungsbenachrichtigungen - Kamera ausw\u00e4hlen",
+        "data": {
+          "camera": "Kamera"
+        },
+        "data_description": {
+          "camera": "Die Kamera, deren Benachrichtigungseinstellungen ge\u00e4ndert werden sollen."
+        }
+      },
+      "camera_notify": {
+        "title": "Bewegungsbenachrichtigungen - {camera}",
+        "data": {
+          "events": "Benachrichtigung senden bei",
+          "targets": "Ziele f\u00fcr diese Kamera"
+        },
+        "data_description": {
+          "events": "Aus: nie. Alle: jedes Bewegungs- und Personenereignis. Nur Person: nur wenn die Kamera eine Person meldet.",
+          "targets": "Leer lassen, um die Standardziele zu verwenden."
+        }
+      }
+    },
+    "abort": {
+      "no_cameras": "Es sind noch keine Kameras geladen. Versuche es erneut, sobald die Integration vollst\u00e4ndig gestartet ist."
+    }
+  },
+  "selector": {
+    "connection_mode": {
+      "options": {
+        "relay": "Automatisch - LAN bevorzugt, Relay als Ausweichweg (empfohlen)",
+        "lan_direct": "Nur LAN (am schnellsten, nur im selben Netzwerk)"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "off": "Aus",
+        "all": "Alle Bewegungs- und Personenereignisse",
+        "person": "Nur Person"
+      }
+    },
+    "publish_mode": {
+      "options": {
+        "in_sync": "Direkte Einspeisung, synchroner Ton f\u00fcr HLS und Aufnahmen (empfohlen)",
+        "go2rtc": "Direkte Einspeisung, HLS und Aufnahmen \u00fcber go2rtc",
+        "no_hls_audio": "Direkte Einspeisung, kein Ton in HLS und Aufnahmen",
+        "ffmpeg": "ffmpeg pro Standardkamera",
+        "ffmpeg_no_hls_audio": "ffmpeg pro Standardkamera, kein Ton in HLS und Aufnahmen"
+      }
+    }
+  },
+  "exceptions": {
+    "talk_no_audio": {
+      "message": "Aus {media} konnte kein Ton dekodiert werden - pr\u00fcfe die Medien-URL oder den Pfad."
+    },
+    "talk_session_failed": {
+      "message": "Es konnte keine Sprechsitzung aufgebaut werden: Die Kamera war nicht erreichbar, oder keine Sitzung konnte Sprechen \u00fcbertragen. Ein Livebild ist nicht erforderlich."
+    },
+    "ptz_failed": {
+      "message": "Der PTZ-Befehl {direction} wurde nicht gesendet (die Kamera muss streamen - \u00f6ffne zuerst das Livebild)."
+    },
+    "sd_playback_not_running": {
+      "message": "Auf dieser Kamera wird gerade keine SD-Kartenaufnahme abgerufen."
+    },
+    "command_failed": {
+      "message": "AiDot {action} fehlgeschlagen: {error}"
+    },
+    "command_rejected": {
+      "message": "AiDot {action} wurde vom Ger\u00e4t abgelehnt."
+    },
+    "not_a_battery_camera": {
+      "message": "aidot.{service} ist f\u00fcr Akkukameras gedacht; diese Kamera ist netzbetrieben und schl\u00e4ft nie."
+    },
+    "wake_refused": {
+      "message": "Die Cloud hat die Aufweckanfrage nicht angenommen (siehe Protokoll)."
+    },
+    "sleep_refused": {
+      "message": "Die Cloud hat die Schlafanfrage nicht angenommen (siehe Protokoll)."
+    },
+    "camera_in_use": {
+      "message": "Die Kamera streamt gerade oder ruft eine Kartenaufnahme ab; beende das zuerst oder warte, bis die Ansicht endet."
+    },
+    "sd_recording_not_found": {
+      "message": "Keine Kartenaufnahme passt; gib den Schl\u00fcssel der Aufnahme aus dem Medienbrowser oder ihre genaue Startzeit an und aktualisiere zuerst die Kartenliste."
+    },
+    "sd_delete_no_session": {
+      "message": "Die Kamera muss streamen, um eine Kartenaufnahme zu l\u00f6schen; \u00f6ffne zuerst ihr Livebild."
+    },
+    "sd_delete_refused": {
+      "message": "Die Kamera hat das L\u00f6schen der Aufnahme abgelehnt."
+    },
+    "sd_recording_ambiguous": {
+      "message": "Mehr als eine Kartenaufnahme beginnt in dieser Sekunde; gib die zu l\u00f6schende Aufnahme \u00fcber ihren Schl\u00fcssel aus dem Medienbrowser an."
+    }
+  },
+  "entity": {
+    "number": {
+      "motion_sensitivity": {
+        "name": "Bewegungsempfindlichkeit"
+      },
+      "speaker_volume": {
+        "name": "Lautsprecherlautst\u00e4rke"
+      },
+      "light_brightness": {
+        "name": "Lichthelligkeit"
+      }
+    },
+    "switch": {
+      "auto_light": {
+        "name": "Licht, wenn jemand erscheint"
+      },
+      "camera_audio": {
+        "name": "Kameraton (im HA-Stream)"
+      },
+      "hdr": {
+        "name": "WDR"
+      },
+      "microphone": {
+        "name": "Mikrofon (Ton-Privatsph\u00e4re)"
+      },
+      "motion_detection": {
+        "name": "Bewegungserkennung"
+      },
+      "osd_timestamp": {
+        "name": "Wasserzeichen"
+      },
+      "ptz_tracking": {
+        "name": "Automatische Verfolgung"
+      },
+      "sound_all": {
+        "name": "Alle Ger\u00e4uscherkennungen"
+      },
+      "sound_baby_cry": {
+        "name": "Babyschrei-Erkennung"
+      },
+      "sound_dog_bark": {
+        "name": "Hundegebell-Erkennung"
+      },
+      "sound_enable": {
+        "name": "Ger\u00e4uscherkennung"
+      },
+      "sound_glass_break": {
+        "name": "Glasbruch-Erkennung"
+      },
+      "sound_smoke_t3": {
+        "name": "Rauchmelder-Erkennung (T3)"
+      },
+      "sound_smoke_t4": {
+        "name": "Rauchmelder-Erkennung (T4)"
+      },
+      "status_led": {
+        "name": "Status-LED"
+      },
+      "voice_prompts": {
+        "name": "Sprachansagen"
+      },
+      "detect_human": {
+        "name": "Personenerkennung"
+      },
+      "detect_vehicle": {
+        "name": "Fahrzeugerkennung"
+      },
+      "detect_package": {
+        "name": "Paketerkennung"
+      },
+      "detect_pet": {
+        "name": "Haustiererkennung"
+      },
+      "auto_siren": {
+        "name": "Automatischer Alarm"
+      },
+      "auto_siren_on_motion": {
+        "name": "Automatischer Alarm bei Bewegung"
+      },
+      "auto_siren_on_person": {
+        "name": "Automatischer Alarm bei Person"
+      },
+      "auto_siren_on_glass_break": {
+        "name": "Automatischer Alarm bei Glasbruch"
+      }
+    },
+    "select": {
+      "night_vision": {
+        "name": "Nachtsicht",
+        "state": {
+          "auto": "Automatisch",
+          "on": "An",
+          "off": "Aus"
+        }
+      },
+      "light_linger_duration": {
+        "name": "Nachleuchtdauer",
+        "state": {
+          "20": "20 Sekunden",
+          "30": "30 Sekunden",
+          "40": "40 Sekunden",
+          "50": "50 Sekunden"
+        }
+      },
+      "light_behavior": {
+        "name": "Lichtverhalten",
+        "state": {
+          "constant": "Dauerlicht",
+          "flash": "Blinken"
+        }
+      }
+    },
+    "event": {
+      "motion": {
+        "name": "Bewegung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Bewegung",
+              "person": "Person",
+              "vehicle": "Fahrzeug",
+              "package": "Paket",
+              "pet": "Haustier"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Batterie"
+      },
+      "sd_card_status": {
+        "name": "SD-Karte",
+        "state": {
+          "present": "Karte eingelegt",
+          "empty": "Steckplatz leer"
+        }
+      },
+      "sd_card_total": {
+        "name": "SD-Karte gesamt"
+      },
+      "sd_card_used": {
+        "name": "SD-Karte belegt"
+      },
+      "wifi_rssi": {
+        "name": "WLAN-Signal"
+      },
+      "wifi_ssid": {
+        "name": "WLAN-Netzwerk"
+      },
+      "last_connect_time": {
+        "name": "Letzte Verbindungsdauer",
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Letzter Beendigungsgrund",
+            "state": {
+              "idle_release": "Kein Zuschauer",
+              "stopped": "Gestoppt",
+              "connection_lost": "Verbindung verloren",
+              "camera_closed": "Von der Kamera geschlossen",
+              "serve_ended": "Stream-Abnehmer ist weg",
+              "no_video": "Kein Video",
+              "media_stalled": "Medien gestoppt",
+              "ice_lost": "Kamera antwortet nicht mehr",
+              "no_media": "Keine Medien",
+              "wrong_codec": "Falscher Videocodec",
+              "busy": "Kamera belegt",
+              "not_ready": "Kamera nicht bereit",
+              "dtls_pin_mismatch": "Zertifikat nicht vertraut",
+              "open_failed": "Verbindung fehlgeschlagen",
+              "error": "Interner Fehler"
+            }
+          }
+        }
+      },
+      "stream_status": {
+        "name": "Stream-Status",
+        "state": {
+          "idle": "Leerlauf",
+          "connecting": "Verbinden",
+          "waking": "Aufwecken",
+          "streaming": "Streamt",
+          "retrying": "Erneuter Versuch",
+          "dormant": "Ruhend",
+          "off": "Aus"
+        },
+        "state_attributes": {
+          "last_end_reason": {
+            "name": "Letzter Beendigungsgrund",
+            "state": {
+              "idle_release": "Kein Zuschauer",
+              "stopped": "Gestoppt",
+              "connection_lost": "Verbindung verloren",
+              "camera_closed": "Von der Kamera geschlossen",
+              "serve_ended": "Stream-Abnehmer ist weg",
+              "no_video": "Kein Video",
+              "media_stalled": "Medien gestoppt",
+              "ice_lost": "Kamera antwortet nicht mehr",
+              "no_media": "Keine Medien",
+              "wrong_codec": "Falscher Videocodec",
+              "busy": "Kamera belegt",
+              "not_ready": "Kamera nicht bereit",
+              "dtls_pin_mismatch": "Zertifikat nicht vertraut",
+              "open_failed": "Verbindung fehlgeschlagen",
+              "error": "Interner Fehler"
+            }
+          },
+          "failures": {
+            "name": "Fehlgeschlagene Versuche"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Belegung"
+      },
+      "person_detected": {
+        "name": "Person erkannt"
+      },
+      "vehicle_detected": {
+        "name": "Fahrzeug erkannt"
+      },
+      "package_detected": {
+        "name": "Paket erkannt"
+      },
+      "pet_detected": {
+        "name": "Haustier erkannt"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "Nach oben bewegen"
+      },
+      "ptz_down": {
+        "name": "Nach unten bewegen"
+      },
+      "ptz_left": {
+        "name": "Nach links bewegen"
+      },
+      "ptz_right": {
+        "name": "Nach rechts bewegen"
+      },
+      "ptz_stop": {
+        "name": "Stopp"
+      },
+      "ptz_zoom_in": {
+        "name": "Vergr\u00f6\u00dfern"
+      },
+      "ptz_zoom_out": {
+        "name": "Verkleinern"
+      },
+      "reboot": {
+        "name": "Neu starten"
+      },
+      "refresh_sd_recordings": {
+        "name": "Aufnahmen auf dem Ger\u00e4t aktualisieren"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Sirene"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Flutlicht"
+      }
+    },
+    "image": {
+      "last_event": {
+        "name": "Letztes Ereignis"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "issues": {
+    "go2rtc_rejects_stream_updates": {
+      "title": "go2rtc lehnt Stream-Aktualisierungen ab",
+      "description": "go2rtc hat die Registrierung des Streams `{stream}` mit einem Fehler beantwortet, und der Stream war weiterhin vorhanden. Seine Konfigurationsdatei (go2rtc.yaml) enth\u00e4lt h\u00f6chstwahrscheinlich einen doppelt aufgef\u00fchrten Stream, wodurch go2rtc jede Registrierung f\u00fcr jede Kamera ablehnt, bis das Duplikat von Hand entfernt wird. Das Livebild funktioniert weiter mit dem, was go2rtc bereits hat; eine seitdem hinzugef\u00fcgte oder umbenannte Kamera wird nicht registriert. Siehe den Abschnitt zur Fehlerbehebung in der README. Diese Meldung verschwindet, sobald eine Registrierung gelingt."
+    },
+    "light_off_subnet": {
+      "title": "{name} befindet sich in einem anderen Netzwerk",
+      "description": "Die Leuchte `{name}` wurde zuletzt unter `{address}` gemeldet, was au\u00dferhalb aller Netzwerke liegt, in denen sich Home Assistant befindet ({networks}); daher schl\u00e4gt die Anmeldung f\u00fcr die lokale Steuerung fehl. Wenn die Leuchte Strom hat, wird sie nur \u00fcber die Cloud gesteuert. Bringe die Leuchte in ein Netzwerk, das Home Assistant teilt, oder gib Home Assistant eine Route dorthin. Dies verschwindet, sobald eine lokale Anmeldung gelingt."
+    },
+    "go2rtc_shared_with_ha": {
+      "title": "Das go2rtc von Home Assistant liest den Server, in den die Kameras einspeisen",
+      "description": "Das go2rtc von Home Assistant ist mit `url: {url}` konfiguriert, und das ist das go2rtc, in das die AiDot-Kameras einspeisen w\u00fcrden. Home Assistant kann einen Stream, den eine Kamera einspeist, nicht lesen; dort einzuspeisen w\u00fcrde also das Livebild jeder Kamera scheitern lassen, ob AiDot oder nicht. Bis dies behoben ist, werden Standardkameras stattdessen abgerufen (kein synchroner HLS-Ton und keine AAC-Spur) und SDES-Kameras (die Akku- und PTZ-Modelle) nicht gestreamt. Unter Home Assistant OS oder Container entferne die Zeile `url:` aus dem Abschnitt `go2rtc:` der configuration.yaml und starte neu: Home Assistant verwendet dann sein eingebautes go2rtc, und die Kameras speisen in den anderen Server ein. Unter Home Assistant Core betreibe ein zweites go2rtc f\u00fcr die Kameras und setze AIDOT_GO2RTC_API darauf. Dies verschwindet, sobald beide verschiedene Server sind."
+    },
+    "sdes_no_go2rtc": {
+      "title": "Kein go2rtc, in das SDES-Kameras einspeisen k\u00f6nnen",
+      "description": "Kein go2rtc hat geantwortet: nichts auf 127.0.0.1:1984 und kein AIDOT_GO2RTC_API, und das in Home Assistant eingebaute go2rtc kann keinen eingespeisten Stream annehmen. SDES-Kameras (die Akku- und PTZ-Modelle) haben keinen anderen Weg und werden nicht gestreamt; Standardkameras streamen weiterhin, direkt abgerufen. Installiere ein go2rtc-Add-on, das auf 127.0.0.1:1984 antwortet - die Integration WebRTC Camera oder das go2rtc-Add-on - und starte neu. Unter Home Assistant Core setze stattdessen AIDOT_GO2RTC_API auf ein selbst betriebenes go2rtc und starte neu. Dies verschwindet, sobald ein go2rtc antwortet."
+    },
+    "weak_wifi": {
+      "title": "{name} hat ein schwaches WLAN-Signal",
+      "description": "Die Kamera `{name}` meldet ein WLAN-Signal von {rssi} dBm. Es lag mindestens {minutes} Minuten lang unter {threshold} dBm, und {stalls} ihrer Livebilder in den letzten {hours} Stunden brauchten {slow} Sekunden oder l\u00e4nger zum Start oder starteten gar nicht. Bei einem so schwachen Signal antwortet die Kamera oft und sendet dann kein Video, sodass die Karte leer bleibt, bis ein erneuter Versuch durchkommt. Stelle die Kamera n\u00e4her an ihren WLAN-Zugangspunkt, versetze einen Zugangspunkt oder f\u00fcge einen n\u00e4her an der Kamera hinzu, oder r\u00e4ume weg, was dazwischen steht. Dieser Hinweis verschwindet, sobald das Signal {clear} dBm oder besser erreicht oder das Livebild wieder z\u00fcgig startet."
+    },
+    "dtls_pin_mismatch": {
+      "title": "{name} hat ein Zertifikat vorgelegt, das sie vorher nicht verwendet hat",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Dem neuen Zertifikat von {name} vertrauen?",
+            "description": "Das Livebild von `{name}` wird abgelehnt, weil die Kamera ein anderes Sicherheitszertifikat (DTLS) vorgelegt hat als zuvor. Das ist nach einem Zur\u00fccksetzen auf Werkseinstellungen, einem Firmware-Update oder dem Austausch der Kamera zu erwarten. Es kann aber auch bedeuten, dass ein anderes Ger\u00e4t in deinem Netzwerk anstelle der Kamera antwortet. Wenn du die Kamera zur\u00fcckgesetzt, aktualisiert oder ersetzt hast, vertraue ihrem neuen Zertifikat: Die n\u00e4chste Verbindung der Kamera zeichnet das Zertifikat auf, und nach einigen Verbindungen wird es wieder festgelegt. Wenn nichts davon zutrifft, pr\u00fcfe zuerst dein Netzwerk."
+          }
+        },
+        "abort": {
+          "camera_not_loaded": "Die Kamera ist gerade nicht geladen. Versuche es erneut, sobald die AiDot-Integration gestartet ist."
+        }
+      }
+    }
+  }
+}
